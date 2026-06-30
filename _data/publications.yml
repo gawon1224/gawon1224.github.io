@@ -1,0 +1,14 @@
+main:
+
+  # 아래는 작성 양식 예시입니다. 본인 논문으로 교체하세요.
+  # 항목별로 필요 없는 줄(code, page, bibtex, notes 등)은 지워도 됩니다.
+  - title: "Your Paper Title Goes Here"
+    authors: <strong>Gawon Seo</strong>, Coauthor Name, Suha Kwak
+    conference_short: Venue
+    conference: Full Venue Name <strong>(ABBR)</strong>, 2026.
+    pdf: https://arxiv.org/abs/xxxx.xxxxx
+    # code: https://github.com/gawon1224/your-repo
+    # page: https://gawon1224.github.io/your-project-page/
+    # bibtex: assets/files/your-paper.txt
+    image: ./assets/img/teaser_example.png
+    notes: Under Review
