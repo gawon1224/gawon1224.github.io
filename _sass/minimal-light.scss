@@ -595,3 +595,176 @@ footer {
   display:none;
   font-family: monospace;
 }
+
+/* =========================================================
+   Custom theme (navy palette) — adapted from daeunni.github.io
+   ========================================================= */
+
+/* Highlighter for research interests */
+.highlight {
+  background-color: #e8f1fb;   /* light navy highlighter */
+  padding: 0 4px;
+  border-radius: 2px;
+}
+
+/* Bold accent for venue names (CVPR, WACV, ...) */
+.text-accent {
+  color: #1a3d6e;   /* navy */
+  font-weight: bold;
+
+  a {
+    color: inherit;
+    font-weight: inherit;
+  }
+}
+
+/* Bold accent for org/lab/company names */
+.text-accent-org {
+  color: #9a6b1f;   /* muted gold, to distinguish from venues */
+  font-weight: bold;
+}
+
+/* Publication author line + card hover effect */
+.publications ol.bibliography li .author {
+  font-size: 12.5px;
+  color: #888;
+  margin: 3px 0;
+}
+
+.pub-row {
+  transition: all 0.3s ease;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: -10px -14px;
+}
+.pub-row:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #f2f7fc, #eaf1f9);
+  box-shadow: 0 4px 16px rgba(26, 61, 110, 0.13);
+}
+
+/* News timeline */
+.timeline {
+  position: relative;
+  padding-left: 44px;
+  margin-top: 12px;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 17px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: linear-gradient(to bottom, #4a6fa5, #9bb9d8);
+  border-radius: 2px;
+}
+.timeline-year {
+  position: relative;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+.timeline-year:first-child {
+  margin-top: 0;
+}
+.timeline-year::before {
+  content: '';
+  position: absolute;
+  left: -33px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #1a3d6e;
+  border: 2.5px solid #fff;
+  box-shadow: 0 0 0 2px #1a3d6e;
+}
+.year-label {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1a3d6e;
+  letter-spacing: 0.5px;
+}
+.timeline-item {
+  position: relative;
+  margin-bottom: 3px;
+  line-height: 1.45;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -31px;
+  top: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #7ba0c9;
+  border: 1.5px solid #fff;
+  box-shadow: 0 0 0 1px #7ba0c9;
+}
+.timeline-month {
+  font-weight: 600;
+  color: #b0b0b0;
+  font-size: 12px;
+  display: inline-block;
+  width: 30px;
+  margin-right: 4px;
+}
+
+/* Section divider — navy gradient */
+hr {
+  border: 0;
+  height: 2px;
+  background: linear-gradient(to right, #4a6fa5, #9bb9d8, transparent);
+  margin: 28px 0;
+}
+
+/* About Me card */
+.about-card {
+  background: linear-gradient(135deg, #eef4fb 0%, #f6f9fd 100%);
+  border-radius: 14px;
+  padding: 14px 22px;
+  border: 1px solid rgba(26, 61, 110, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .pub-row:hover {
+    background: linear-gradient(135deg, rgba(74,111,165,0.10), rgba(155,185,216,0.08));
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  }
+  .timeline::before {
+    background: linear-gradient(to bottom, rgba(74,111,165,0.5), rgba(155,185,216,0.4));
+  }
+  .timeline-year::before {
+    border-color: #20212b;
+    box-shadow: 0 0 0 2px #4a6fa5;
+    background: #4a6fa5;
+  }
+  .year-label {
+    color: #7fb3e8;
+  }
+  .timeline-item::before {
+    border-color: #20212b;
+    box-shadow: 0 0 0 1px #7ba0c9;
+  }
+  .timeline-month {
+    color: #777;
+  }
+  .highlight {
+    background-color: rgba(74,111,165,0.18);
+  }
+  .text-accent {
+    color: #7fb3e8;
+  }
+  .text-accent-org {
+    color: #d6a85a;
+  }
+  hr {
+    background: linear-gradient(to right, rgba(74,111,165,0.6), rgba(155,185,216,0.4), transparent);
+  }
+  .about-card {
+    background: linear-gradient(135deg, rgba(74,111,165,0.08), rgba(155,185,216,0.06));
+    border-color: rgba(74,111,165,0.14);
+  }
+}
