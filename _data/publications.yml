@@ -23,6 +23,13 @@ main:
     # bibtex: assets/files/your-paper.txt
     image: ./assets/img/CompACT_teaser.png
 
+  - title: "Planning in 16 tokens: A compact discrete tokenizer for latent world model"
+    authors: Dongwon Kim, Jinsung Lee, <strong>Gawon Seo</strong>, Minsu Cho, Suha Kwak
+    conference_short: CVPR 2026
+    conference: The Conference on Robot Learning Workshop (CoRLW) - Learning to Simulate Robot Worlds (LSRW), 2025.
+    # bibtex: assets/files/your-paper.txt
+    image: ./assets/img/CompACT16_teaser.png
+
   - title: "Generating Accurate and Detailed Captions for High-Resolution Images"
     authors: Hankyeol Lee, <strong>Gawon Seo</strong>, Kyounggyu Lee, Dogun Kim, Kyungwoo Song, Jiyoung Jung
     conference_short: arXiv preprint
