@@ -14,8 +14,8 @@ I am a M.S. student in the [Computer Vision Lab at POSTECH](https://cvlab.postec
 
 ## Research Direction
 
-- <span class="highlight"><b>Latent World Models for decision-time planning</b></span>
-- <span class="highlight"><b>Efficient Planning for Embodied Decision Making</b></span>
+- <span class="highlight"><b>Latent world models for decision-time planning</b></span>
+- <span class="highlight"><b>Efficient and realizable planning for embodied AI</b></span>
 
 ---
 
