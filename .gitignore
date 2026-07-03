@@ -5,3 +5,7 @@ Gemfile.lock
 .DS_Store
 .jekyll-cache
 git-update.sh
+
+# ACID local backups (not deployed)
+ACID/static/videos/lewm/_orig_backup/
+ACID/static/figures/*.orig.png
