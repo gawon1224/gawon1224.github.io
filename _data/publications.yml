@@ -19,7 +19,7 @@ main:
     conference: The IEEE/CVF Conference on Computer Vision and Pattern Recognition <strong>(CVPR)</strong>, 2026.
     pdf: https://arxiv.org/abs/2603.05438
     # code: https://github.com/gawon1224/your-repo
-    # page: https://gawon1224.github.io/your-project-page/
+    page: https://kdwonn.github.io/CompACT/
     # bibtex: assets/files/your-paper.txt
     image: ./assets/img/CompACT_teaser.png
 
