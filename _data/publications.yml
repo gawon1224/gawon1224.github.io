@@ -4,7 +4,7 @@ main:
   # 항목별로 필요 없는 줄(code, page, bibtex, notes 등)은 지워도 됩니다.
   - title: "ACID: Action Consistency via Inverse Dynamics for Planning with World Models"
     authors: <strong>Gawon Seo</strong>, Dongwon Kim$\dagger$, Suha Kwak$\dagger$ ($\dagger$=corresponding authors)
-    conference_short: arXiv preprint
+    # conference_short: arXiv preprint
     conference: arXiv preprint.
     pdf: https://arxiv.org/pdf/2607.02403
     # code: https://github.com/gawon1224/your-repo
@@ -25,14 +25,14 @@ main:
 
   - title: "Planning in 16 tokens: A compact discrete tokenizer for latent world model"
     authors: Dongwon Kim, Jinsung Lee, <strong>Gawon Seo</strong>, Minsu Cho, Suha Kwak
-    conference_short: CVPR 2026
+    conference_short: CoRLW 2025
     conference: The Conference on Robot Learning Workshop (CoRLW) - Learning to Simulate Robot Worlds (LSRW), 2025.
     # bibtex: assets/files/your-paper.txt
     image: ./assets/img/CompACT16_teaser.png
 
   - title: "Generating Accurate and Detailed Captions for High-Resolution Images"
     authors: Hankyeol Lee, <strong>Gawon Seo</strong>, Kyounggyu Lee, Dogun Kim, Kyungwoo Song, Jiyoung Jung
-    conference_short: arXiv preprint
+    # conference_short: arXiv preprint
     conference: arXiv preprint.
     pdf: https://arxiv.org/pdf/2510.27164
     # code: https://github.com/gawon1224/your-repo
