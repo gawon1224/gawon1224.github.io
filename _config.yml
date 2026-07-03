@@ -1,13 +1,13 @@
 # Basic Information
 title: Gawon Seo
-position: Graduate Student   # 필요시 "M.S. Student" / "Ph.D. Student" 로 수정하세요
+position: M.S. Student   # 필요시 "M.S. Student" / "Ph.D. Student" 로 수정하세요
 affiliation: POSTECH Computer Vision Lab
 email: gawon (at) postech.ac.kr   # 실제 이메일로 수정하세요
 
 # Search Engine Optimization (SEO)
 # The following information is used to improve the website traffic from search engines, e.g., Google.
-keywords: Gawon Seo, POSTECH, Computer Vision, Graduate Student, Researcher
-description: Gawon Seo is a graduate student at POSTECH Computer Vision Lab, advised by Prof. Suha Kwak.
+keywords: Gawon Seo, POSTECH, Computer Vision, M.S. Student, Researcher
+description: Gawon Seo is an M.S. student at POSTECH Computer Vision Lab, advised by Prof. Suha Kwak.
 canonical: https://gawon1224.github.io/
 
 # Links

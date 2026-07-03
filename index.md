@@ -15,8 +15,8 @@ I am a graduate student at [POSTECH Computer Vision Lab](https://cvlab.postech.a
 
 ## Research Direction
 
-- <span class="highlight"><b>Realizable World Models</b></span>
-- <span class="highlight"><b>Efficient Planning for Embodied AI</b></span>
+- <span class="highlight"><b>Latent World Models</b></span>
+- <span class="highlight"><b>Efficient Planning for Embodied Decision Making</b></span>
 
 ---
 
