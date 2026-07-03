@@ -165,6 +165,18 @@
 <section class="section" style="padding-top: 0;">
   <div class="container is-max-desktop">
     <h2 class="title is-3 has-text-centered">The Realization Gap</h2>
+
+    <div style="margin: 0 auto 1.8rem auto;">
+      <img src="./static/figures/qual_dino_wm.png" alt="Real vs. imagined rollouts under the Original cost (DINO-WM)"
+           style="width: 100%; height: auto; border-radius: 8px; border: 1px solid #cfe0f7; background: #f7faff;">
+      <p class="caption" style="max-width: 900px;">
+        <b>A predicted trajectory can look convincing yet be unrealizable.</b> Under the standard
+        (<i>Original</i>) cost on DINO-WM, the <i>imagined</i> rollout reaches the goal, but the
+        <i>real</i> environment rollout &mdash; obtained by executing the same planned actions &mdash;
+        drifts away from it. The goal cost alone cannot detect this gap.
+      </p>
+    </div>
+
     <p class="content has-text-justified" style="max-width: 820px; margin: 0 auto 1rem auto;">
       Search-based planning samples candidate action sequences, simulates them through a world model,
       and executes the one that minimizes a planning cost. But that cost, defined solely by the proximity
