@@ -31,7 +31,7 @@ main:
     # code: https://github.com/gawon1224/your-repo
     # page: https://gawon1224.github.io/your-project-page/
     # bibtex: assets/files/your-paper.txt
-    image: ./assets/img/teaser_example.png
+    image: ./assets/img/Detail_caption_teaser.png
 
   - title: "Enhancing visual classification using comparative descriptors"
     authors: Hankyeol Lee, <strong>Gawon Seo</strong>, Wonseok Choi, Geunyoung Jung, Kyungwoo Song, Jiyoung Jung
@@ -41,6 +41,6 @@ main:
     # code: https://github.com/gawon1224/your-repo
     # page: https://gawon1224.github.io/your-project-page/
     # bibtex: assets/files/your-paper.txt
-    image: ./assets/img/teaser_example.png
+    image: ./assets/img/Comparative_teaser.png
     # notes: Under Review
 
