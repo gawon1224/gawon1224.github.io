@@ -160,7 +160,7 @@ papertitle {
     }
 
     .image.avatar {
-      border-radius: 16px;
+      border-radius: 30px;
     }
 
       .image.avatar:before {
@@ -168,9 +168,9 @@ papertitle {
       }
 
       .image.avatar img {
-        border-radius: 16px;
+        border-radius: 30px;
         width: 60%;
-        padding: 20px;
+        padding: 0;
         // border: 1px solid #ddd;
         // padding: 3px;
         // box-shadow: 0 -1px 5px 1px rgba(200, 200, 200, 0.3);
@@ -420,9 +420,9 @@ footer {
 
 
    .image.avatar img {
-        border-radius: 16px;
+        border-radius: 30px;
         width: 200px;
-        padding:20px;
+        padding: 0;
       }
   #head1o2 {
     visibility: hidden;
@@ -476,9 +476,9 @@ footer {
   }
 
   .image.avatar img {
-      border-radius: 16px;
+      border-radius: 30px;
       width: 160px;
-      padding:20px;
+      padding: 0;
   }
   #head1o2 {
     visibility: hidden;
