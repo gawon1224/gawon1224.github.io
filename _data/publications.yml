@@ -3,7 +3,7 @@ main:
   # 아래는 작성 양식 예시입니다. 본인 논문으로 교체하세요.
   # 항목별로 필요 없는 줄(code, page, bibtex, notes 등)은 지워도 됩니다.
   - title: "ACID: Action Consistency via Inverse Dynamics for Planning with World Models"
-    authors: <strong>Gawon Seo</strong>, Dongwon Kim$\dagger$, Suha Kwak$\dagger$ ($\dagger$=corresponding authors)
+    authors: <strong>Gawon Seo</strong>, Dongwon Kim<sup>&dagger;</sup>, Suha Kwak<sup>&dagger;</sup> (&dagger;=corresponding authors)
     # conference_short: arXiv preprint
     conference: arXiv preprint.
     pdf: https://arxiv.org/pdf/2607.02403
