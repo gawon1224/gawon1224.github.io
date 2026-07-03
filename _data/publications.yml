@@ -10,7 +10,7 @@ main:
     # code: https://github.com/gawon1224/your-repo
     page: https://gawon1224.github.io/ACID/
     # bibtex: assets/files/your-paper.txt
-    image: ./assets/img/teaser_example.png
+    image: ./assets/img/ACID_teaser.png
     notes: Under Review
   
   - title: "Planning in 8 tokens: A compact discrete tokenizer for latent world model"
@@ -18,6 +18,16 @@ main:
     conference_short: CVPR 2026
     conference: The IEEE/CVF Conference on Computer Vision and Pattern Recognition <strong>(CVPR)</strong>, 2026.
     pdf: https://arxiv.org/abs/2603.05438
+    # code: https://github.com/gawon1224/your-repo
+    # page: https://gawon1224.github.io/your-project-page/
+    # bibtex: assets/files/your-paper.txt
+    image: ./assets/img/CompACT_teaser.png
+
+  - title: "Generating Accurate and Detailed Captions for High-Resolution Images"
+    authors: Hankyeol Lee, <strong>Gawon Seo</strong>, Kyounggyu Lee, Dogun Kim, Kyungwoo Song, Jiyoung Jung
+    conference_short: arXiv preprint
+    conference: arXiv preprint.
+    pdf: https://arxiv.org/pdf/2510.27164
     # code: https://github.com/gawon1224/your-repo
     # page: https://gawon1224.github.io/your-project-page/
     # bibtex: assets/files/your-paper.txt
