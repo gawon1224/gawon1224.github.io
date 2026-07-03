@@ -324,6 +324,27 @@ code {
   border: 1px solid #cfe0f7;
   background: #f7faff;
 }
+/* Two media joined seamlessly inside one rounded border (PLDM pairs) */
+.qv-media-pair {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 0;
+  border: 1px solid #cfe0f7;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f7faff;
+}
+.qv-media-pair > video,
+.qv-media-pair > img {
+  flex: 1;
+  min-width: 0;
+  display: block;
+  width: 100%;
+  height: auto;
+  border: none;
+  border-radius: 0;
+}
 
 @media screen and (max-width: 600px) {
   .qv-ch-cells > span,
