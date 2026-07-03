@@ -123,7 +123,7 @@
         <code>a<sub>0:H-1</sub></code> to minimize an augmented planning cost. The current observation
         is encoded to <code>z<sub>0</sub></code>, and the world model <code>F<sub>&theta;</sub></code>
         unrolls a latent trajectory. An inverse dynamics model <code>G<sub>&phi;</sub></code> then
-        takes each predicted transition <code>(&zcaron;<sub>t</sub>, &zcaron;<sub>t+1</sub>)</code> and
+        takes each predicted transition <code>(&#x1E91;<sub>t</sub>, &#x1E91;<sub>t+1</sub>)</code> and
         infers the action that would explain it. The augmented cost combines a <i>goal cost</i>
         (predicted final latent close to the goal) with an <i>action consistency cost</i> (the predicted
         trajectory is realizable in the environment).
@@ -199,9 +199,9 @@
         <div class="acid-card">
           <h3 class="title is-4">Cycle Action Consistency</h3>
           <p>
-            If a predicted transition <code>&zcaron;<sub>t+1</sub> = F<sub>&theta;</sub>(&zcaron;<sub>t</sub>, a<sub>t</sub>)</code>
+            If a predicted transition <code>&#x1E91;<sub>t+1</sub> = F<sub>&theta;</sub>(&#x1E91;<sub>t</sub>, a<sub>t</sub>)</code>
             truly reflects <code>a<sub>t</sub></code>, then the action an IDM infers from
-            <code>(&zcaron;<sub>t</sub>, &zcaron;<sub>t+1</sub>)</code> should recover it. The residual
+            <code>(&#x1E91;<sub>t</sub>, &#x1E91;<sub>t+1</sub>)</code> should recover it. The residual
             vanishes exactly when the transition is the one <code>a<sub>t</sub></code> produces, and grows
             as the prediction drifts.
           </p>
