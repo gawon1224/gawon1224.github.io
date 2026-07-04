@@ -15,7 +15,7 @@ canonical: https://gawon1224.github.io/
 google_scholar: https://scholar.google.com/citations?user=p9cgBRkAAAAJ&hl=ko
 cv_link: assets/files/curriculum_vitae.pdf      # assets/files/ 에 CV PDF를 넣으세요 (없으면 이 줄 삭제)
 github_link: https://github.com/gawon1224
-# linkedin: https://www.linkedin.com/in/your-id/   # 필요하면 주석 해제 후 수정
+linkedin: https://www.linkedin.com/in/gawon-seo-9a3588279/
 # twitter: https://twitter.com/your-id             # 필요하면 주석 해제 후 수정
 
 # Images (e.g., your profile picture and your website's favicon)
