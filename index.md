@@ -4,7 +4,8 @@ layout: homepage
 <div class="about-card" markdown="1">
 
 ## About Me
-I am a 2nd year M.S. student in the [Computer Vision Lab at POSTECH](https://cvlab.postech.ac.kr/lab/), advised by Prof. [Suha Kwak](https://suhakwak.github.io/). I work on world models for embodied AI, and recently I've been focusing on latent world models for decision-time planning.
+I am a 2nd year M.S. student in the [Computer Vision Lab at POSTECH](https://cvlab.postech.ac.kr/lab/), advised by Prof. [Suha Kwak](https://suhakwak.github.io/).<br>
+I work on world models for embodied AI, and recently I've been focusing on latent world models for decision-time planning.
 
 <!-- 여기에 본인 소개를 자유롭게 채워 넣으세요. 이전 인턴 경험, 학부, 관심 주제 등 -->
 
