@@ -82,3 +82,12 @@ blockquote { background: var(--global-bg-color); border-left: 2px solid var(--gl
 .publications ol.bibliography li div.abstract.hidden.open { border-color: var(--global-text-color); }
 
 .publications ol.bibliography li .teaser { border-radius: 8px; box-shadow: 3px 3px 6px #888; width: 340px; max-width: 100%; height: auto; margin-top: 5px; margin-left: 5px; margin-bottom: 5px; object-fit: contain; }
+
+/* .pub-row is a flex container (style.scss) and .col-sm-9 asks for width:100%,
+   which shrank the teaser column below its declared width. Pin the image column
+   to its content and let the text column absorb the remaining space. */
+.publications ol.bibliography li .pub-row > .col-sm-3 { flex: 0 0 auto; }
+
+.publications ol.bibliography li .pub-row > .col-sm-9 { flex: 1 1 auto; min-width: 0; width: auto; }
+
+@media screen and (max-width: 800px) { .publications ol.bibliography li .teaser { width: 240px; } }
