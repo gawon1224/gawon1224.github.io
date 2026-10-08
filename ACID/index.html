@@ -1,642 +1,842 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="description"
-        content="ACID augments decision-time planning with action-conditioned world models by a cycle action consistency cost: an inverse dynamics model checks that each predicted transition is realizable, improving planning with substantially less compute.">
-  <meta name="keywords" content="ACID, World Model, Decision-time Planning, Cycle Action Consistency, Inverse Dynamics Model, Model Predictive Control, Cross-Entropy Method, JEPA, Embodied Control">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ACID: Action Consistency via Inverse Dynamics for Planning with World Models</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ACID: Action Consistency via Inverse Dynamics for Planning with World Models</title>
+<meta name="description" content="ACID augments decision-time planning with action-conditioned world models by a cycle action consistency cost: an inverse dynamics model checks that each predicted transition is realizable, improving planning with substantially less compute.">
+<meta name="keywords" content="ACID, World Model, Decision-time Planning, Cycle Action Consistency, Inverse Dynamics Model, Model Predictive Control, Cross-Entropy Method, JEPA, Embodied Control">
+<meta property="og:title" content="ACID: Action Consistency via Inverse Dynamics for Planning with World Models">
+<meta property="og:description" content="A decision-time planning cost that verifies each predicted transition is realizable via cycle action consistency.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --ink: #0f172a;
+    --ink-2: #475569;
+    --ink-3: #94a3b8;
+    --line: #e2e8f0;
+    --orig: #a3abb8;
+    --ours: #2556d6;
+    --ours-soft: #e9efff;
+    --idm: #e07b2e;
+    --idm-soft: #fdf0e6;
+    --good: #15803d;
+    --bad: #b91c1c;
+    --sans: "Inter", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: 64px; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 var(--sans); }
+  a { color: var(--ours); }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
+  .narrow { max-width: 760px; }
 
-  <meta property="og:title" content="ACID: Action Consistency via Inverse Dynamics for Planning with World Models">
-  <meta property="og:description" content="A decision-time planning cost that verifies each predicted transition is realizable via cycle action consistency.">
+  .topbar { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,.88); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .topbar .wrap { display: flex; align-items: center; gap: 20px; height: 56px; }
+  .logo { font: 700 18px var(--sans); letter-spacing: -.02em; text-decoration: none; color: var(--ink); }
+  .logo span { color: var(--ours); }
+  .topbar nav { display: flex; gap: 18px; overflow-x: auto; flex: 1; }
+  .topbar nav a { color: var(--ink-2); text-decoration: none; font-size: 13px; font-weight: 500; white-space: nowrap; }
+  .topbar nav a.on { color: var(--ink); }
+  .topbar .cta { font: 600 13px var(--sans); background: var(--ink); color: #fff; padding: 8px 14px; border-radius: 8px; text-decoration: none; white-space: nowrap; }
 
-  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
-        rel="stylesheet">
+  .hero { max-width: 820px; padding: 56px 0 24px; }
+  .pill { display: inline-flex; gap: 8px; align-items: center; font: 500 12px var(--mono); color: var(--ours); background: var(--ours-soft); padding: 5px 10px; border-radius: 999px; }
+  h1 { font: 700 clamp(30px, 4.2vw, 46px)/1.08 var(--sans); letter-spacing: -.03em; margin: 16px 0 14px; }
+  .hero p { color: var(--ink-2); font-size: 17px; margin: 0 0 18px; }
+  .authors a { color: var(--ink); text-decoration: none; font-weight: 500; margin-right: 14px; }
+  .authors small { color: var(--ink-3); }
+  .btns { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+  .btn { font: 600 13px var(--sans); padding: 10px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); text-decoration: none; cursor: pointer; }
+  .btn.p { background: var(--ours); border-color: var(--ours); color: #fff; }
 
-  <link rel="stylesheet" href="./static/css/bulma.min.css">
-  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
-  <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
-  <link rel="stylesheet" href="./static/css/index.css">
-  <link rel="stylesheet" href="./static/css/acid.css">
+  section { padding: 48px 0; }
+  .num { font: 500 12px var(--mono); color: var(--ours); letter-spacing: .06em; }
+  h2 { font: 700 28px/1.2 var(--sans); letter-spacing: -.02em; margin: 6px 0 10px; }
+  h3.sub { font: 700 18px/1.3 var(--sans); letter-spacing: -.01em; margin: 34px 0 4px; }
+  p.lead { font-size: 17px; color: var(--ink-2); margin: 0 0 12px; }
+  p.lead b, p b { color: var(--ink); }
+  .note { font-size: 12px; color: var(--ink-3); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script defer src="./static/js/fontawesome.all.min.js"></script>
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script id="MathJax-script" async
-          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  /* ---------- 01: Fig. 3 step-through ---------- */
+  .f3 { margin-top: 20px; }
+  .f3-head, .f3-row { display: grid; grid-template-columns: 2fr 2.4fr 2.4fr 2fr; gap: 14px; }
+  .f3-head { font: 700 18px/1.25 var(--sans); color: var(--ink); padding: 0 0 10px; align-items: end; letter-spacing: -.01em; }
+  .f3-head span { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+  .f3-head small { font: 500 15px var(--mono); color: var(--ink-2); letter-spacing: 0; }
+  .f3-row { margin-bottom: 18px; align-items: stretch; }
+  .f3-task { grid-column: 1 / -1; font: 600 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin: 6px 0 -6px; }
+  .f3 img { width: 100%; display: block; border-radius: 8px; }
+  .f3-big { position: relative; align-self: center; }
+  .f3-big img { aspect-ratio: 1; object-fit: cover; height: auto; }
+  .f3-pair { display: grid; grid-template-rows: 1fr 1fr; gap: 8px; border-radius: 12px; padding: 8px; }
+  .f3-pair.orig { background: #fef2f2; }
+  .f3-pair.ours { background: var(--ours-soft); }
+  .f3-cell { position: relative; display: grid; grid-template-columns: 78px 1fr; gap: 8px; align-items: center; }
+  .f3-cell .lab { font: 600 14px/1.3 var(--sans); color: var(--ink); }
+  .f3-cell .lab small { display: block; font: 500 13px var(--mono); color: var(--ink-2); }
+  .f3-cell img { aspect-ratio: 1; object-fit: cover; transition: opacity .25s; }
+  .f3-ctl { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 4px 0 18px; }
+  .steps-seg { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+  .steps-seg button { font: 500 13px var(--mono); border: 0; background: transparent; padding: 7px 14px; border-radius: 7px; cursor: pointer; color: var(--ink-2); }
+  .steps-seg button.on { background: var(--ink); color: #fff; }
+  .playbtn { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); cursor: pointer; font-size: 13px; }
+  .verdict { font: 600 13px var(--sans); padding: 3px 9px; border-radius: 6px; color: #fff; }
+  .verdict.fail { background: var(--bad); } .verdict.ok { background: var(--good); }
+  .key { display: grid; gap: 10px; margin-top: 8px; }
+  .key div { display: grid; grid-template-columns: 76px 1fr; gap: 12px; font-size: 14px; color: var(--ink-2); border-left: 3px solid var(--line); padding: 2px 0 2px 12px; }
+  .key div b { color: var(--ink); font-size: 14px; }
+  .key div:nth-child(1) { border-color: #f87171; }
+  .key div:nth-child(2) { border-color: var(--ours); }
+  dialog { border: 0; border-radius: 14px; padding: 12px; max-width: min(1200px, 96vw); }
+  dialog img { width: 100%; display: block; }
+  dialog::backdrop { background: rgba(15,23,42,.6); }
+
+  /* ---------- 02: cycle stepper ---------- */
+  .cycle { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; margin-top: 20px; }
+  .steps { display: flex; flex-direction: column; gap: 12px; }
+  .step { padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); cursor: pointer; transition: border-color .2s, box-shadow .2s; }
+  .step h4 { margin: 0 0 4px; font: 600 15px/1.3 var(--sans); }
+  .step p { margin: 0; font-size: 14px; color: var(--ink-2); }
+  .step.on { border-color: var(--ink); box-shadow: 0 1px 0 var(--ink); }
+  .cyc-svg { position: sticky; top: 80px; }
+  .cyc-svg svg { width: 100%; height: auto; display: block; }
+  .cyc-svg .dim { opacity: .15; transition: opacity .35s; }
+  .eq { font: 500 15px/1.4 var(--mono); text-align: center; padding: 12px 0 2px; color: var(--ink); }
+  .b-ink { color: var(--ours); } .o-ink { color: var(--idm); }
+
+  /* ---------- 02b: animated pipeline ---------- */
+  .pipe-fig { position: relative; }
+  .pipe-fig img { width: 100%; display: block; }
+  .pipe-fig svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  /* Outlines are always fully visible; only the glow behind them pulses, so nothing depends on an animation finishing. */
+  .pipe-fig .ol { fill: none; stroke-width: 4; }
+  .pipe-fig .ol.glow { stroke-width: 16; opacity: .18; animation: glowPulse 1.4s ease-in-out infinite; }
+  @keyframes glowPulse { 50% { opacity: .06; } }
+  @media (prefers-reduced-motion: reduce) { .pipe-fig .ol.glow { animation: none; } }
+  .pipe-bottom { display: grid; grid-template-columns: 1.15fr 1fr; gap: 24px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .algo { list-style: none; margin: 0; padding: 0; font: 13px/1.5 var(--mono); counter-reset: ln; }
+  .algo li { counter-increment: ln; display: flex; gap: 10px; padding: 3px 8px; border-radius: 6px; color: var(--ink-3); transition: background .25s, color .25s; }
+  .algo li::before { content: counter(ln); width: 18px; text-align: right; color: #cbd5e1; flex: none; }
+  .algo li.on { background: var(--ink); color: #fff; }
+  .algo li.on::before { color: #94a3b8; }
+  .algo li .c { margin-left: auto; padding-left: 12px; font-size: 12px; opacity: .8; white-space: nowrap; }
+  .algo .i1 { padding-left: 26px; } .algo .i2 { padding-left: 44px; }
+  .pipe-meta { display: flex; align-items: center; gap: 10px; }
+  .pipe-meta .chip { cursor: default; }
+  .pipe-side h4 { margin: 12px 0 4px; font-size: 17px; letter-spacing: -.01em; }
+  .pipe-side p { margin: 0; color: var(--ink-2); font-size: 14px; min-height: 66px; }
+  .pipe-prog { display: flex; gap: 3px; margin: 14px 0 12px; }
+  .pipe-prog i { flex: 1; height: 4px; border-radius: 2px; background: var(--line); cursor: pointer; }
+  .pipe-prog i.done { background: #94a3b8; }
+  .pipe-prog i.on { background: var(--ink); }
+  .pipe-ctl { display: flex; gap: 8px; }
+  @media (max-width: 860px) { .pipe-bottom { grid-template-columns: 1fr; } .algo { font-size: 12px; } .algo li .c { display: none; } }
+
+  /* ---------- 03: results ---------- */
+  .metric-row { display: grid; gap: 14px; margin-top: 14px; }
+  .metric-row.three { grid-template-columns: repeat(3, 1fr); }
+  .metric-row.two { grid-template-columns: repeat(2, 1fr) 1fr; }
+  .mh { display: flex; justify-content: space-between; align-items: baseline; margin-top: 22px; }
+  .mh b { font-size: 14px; }
+  .tchart { padding: 16px 16px 10px; }
+  .tchart h4 { margin: 0; font-size: 15px; }
+  .tchart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .tchart text { font: 11px var(--sans); fill: var(--ink-2); }
+  .tchart text.d { font: 600 12px var(--sans); fill: var(--good); }
+  .tchart .bar { cursor: default; }
+  .side { display: flex; flex-direction: column; gap: 10px; }
+  .side .ovh { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ovh div { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .ovh b { font: 600 16px var(--sans); display: block; }
+  .ovh span { font-size: 12px; color: var(--ink-2); }
+
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .chip { font: 500 13px var(--sans); padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); cursor: pointer; color: var(--ink-2); }
+  .chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .rail-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-top: 34px; }
+  .rail-ctl { display: flex; align-items: center; gap: 8px; flex: none; }
+  .rail-ctl button { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; font-size: 16px; }
+  .rail-ctl button:disabled { opacity: .35; cursor: default; }
+  .rail { display: grid; align-items: start; grid-auto-flow: column; grid-auto-columns: min(560px, 86vw); gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; padding: 14px 2px 10px; scrollbar-width: thin; }
+  .rcard { scroll-snap-align: start; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+  .rcard .hd { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+  .rcard .hd b { font-size: 15px; }
+  .rcard .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rcard .pair + .wm { margin-top: 12px; }
+  .rcard .wm { font: 600 12px var(--sans); color: var(--ink-2); margin: 0 0 6px; }
+  .rcard .cdv { font: 500 12px var(--mono); color: var(--ink-2); margin-top: 6px; text-align: center; }
+  .rcard .cdv.u { color: var(--ours); font-weight: 600; }
+  .pv { border-radius: 10px; overflow: hidden; background: #0b0f17; position: relative; }
+  .pv video { width: 100%; display: block; image-rendering: pixelated; }
+  .pv .tag { position: absolute; top: 8px; left: 8px; font: 600 11px var(--sans); background: rgba(255,255,255,.92); padding: 3px 8px; border-radius: 6px; }
+  .pv .res { position: absolute; top: 8px; right: 8px; font: 600 11px var(--sans); padding: 3px 8px; border-radius: 6px; color: #fff; }
+  /* PLDM ships rollout and goal separately; lay them out as one 2:1 frame like the Le-WM videos. */
+  .pv .split { display: grid; grid-template-columns: 1fr 1fr; }
+  .pv .split video, .pv .split img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; image-rendering: pixelated; }
+  .rcard .cap { font-size: 12px; color: var(--ink-3); margin: 8px 0 0; }
+
+  /* ---------- 04: robot ---------- */
+  .rtask { margin-top: 18px; }
+  .rtask .hd { display: flex; gap: 10px; align-items: baseline; }
+  .rtask .hd b { font-size: 16px; }
+  .rvids { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 10px; }
+  .rv { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .rv.win { border-color: var(--ours); box-shadow: 0 0 0 1px var(--ours); }
+  .rv video { width: 100%; display: block; aspect-ratio: 4 / 3; object-fit: cover; background: #0b0f17; }
+  .rv .cap { padding: 12px 14px 14px; }
+  .rv .cap .h { display: flex; justify-content: space-between; gap: 8px; font: 600 14px var(--sans); }
+  .rv .cap .res { font: 600 12px var(--sans); padding: 2px 8px; border-radius: 6px; color: #fff; white-space: nowrap; }
+  .rv .cap p { margin: 6px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+  .rbars { margin-top: 18px; display: grid; gap: 12px; }
+  .rrow { display: grid; grid-template-columns: 190px 1fr 120px; gap: 14px; align-items: center; font-size: 13px; }
+  .rrow .nm { font-weight: 500; }
+  .rrow .nm.win { font-weight: 700; }
+  .rtrack { display: grid; gap: 4px; }
+  .rtrack i { display: block; height: 10px; border-radius: 0 4px 4px 0; background: var(--orig); }
+  .rtrack i.u { background: var(--ours); }
+  .rtrack i + i { opacity: .7; }
+  .rrow .v { font: 500 13px var(--mono); text-align: right; }
+  .rkey { display: flex; gap: 16px; font-size: 12px; color: var(--ink-3); }
+  @media (max-width: 860px) { .rvids { grid-template-columns: 1fr; } .rrow { grid-template-columns: 90px 1fr 96px; } }
+
+  /* ---------- 05: compute ---------- */
+  .chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .chart text { font: 11px var(--sans); fill: var(--ink-3); }
+  .chart .lbl { fill: var(--ink); font-weight: 600; }
+  .compute-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 16px; margin-top: 16px; }
+  .cd-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .cd-pair h5 { margin: 0 0 2px; font-size: 13px; }
+  .plot-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--ink-2); margin: 0 0 6px; }
+  .plot-legend svg { width: 22px; height: 8px; display: inline-block; vertical-align: middle; margin-right: 5px; overflow: visible; }
+
+  pre { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 18px; font: 13px/1.55 var(--mono); overflow-x: auto; margin: 0; }
+  .tip { position: fixed; pointer-events: none; background: var(--ink); color: #fff; font: 12px/1.45 var(--sans); padding: 8px 10px; border-radius: 8px; opacity: 0; z-index: 50; }
+  footer { text-align: center; color: var(--ink-3); font-size: 12px; padding: 30px 0 60px; }
+
+  @media (max-width: 960px) {
+    .metric-row.three, .metric-row.two { grid-template-columns: 1fr 1fr; }
+    .compute-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 860px) {
+    .two, .player, .cycle { grid-template-columns: 1fr; }
+    .cyc-svg { position: static; }
+    .key div { grid-template-columns: 1fr; gap: 2px; }
+  }
+  @media (max-width: 640px) {
+    .f3-head { display: none; }
+    .f3-row { grid-template-columns: 1fr 1fr; }
+    .f3-big { order: 3; }
+    .f3-big::before { content: attr(data-l); position: absolute; bottom: 8px; left: 8px; font: 600 11px var(--sans); background: rgba(255,255,255,.92); padding: 2px 7px; border-radius: 5px; z-index: 1; }
+    .f3-pair { grid-template-rows: auto auto auto; }
+    .f3-pair::before { content: attr(data-l); font: 600 12px var(--sans); }
+    .f3-cell { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 860px) and (min-width: 641px) {
+    .f3-cell { grid-template-columns: 1fr; }
+    .f3-cell .lab { display: flex; gap: 6px; align-items: baseline; }
+  }
+  @media (max-width: 560px) {
+    .metric-row.three, .metric-row.two, .cd-pair { grid-template-columns: 1fr; }
+  }
+</style>
 </head>
 <body>
+<div class="topbar"><div class="wrap">
+  <a class="logo" href="#">AC<span>ID</span></a>
+  <nav id="nav"><a href="#gap">Realization gap</a><a href="#cycle">Method</a><a href="#results">Results</a><a href="#robot">Real robot</a><a href="#compute">Compute</a><a href="#bib">BibTeX</a></nav>
+  <a class="cta" href="https://arxiv.org/pdf/2607.02403">Paper ↗</a>
+</div></div>
 
-<div class="acid-top-gradient">
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <span class="pill">● Decision-time planning · World models</span>
+      <h1>ACID: Action Consistency via Inverse Dynamics for Planning with World Models</h1>
+      <p>A predicted trajectory can look like it reaches the goal while the real one drifts away. ACID checks every predicted step by asking an inverse dynamics model which action it implies.</p>
+      <div class="authors" id="authors"></div>
+      <div class="authors"><small>¹POSTECH · ²KAIST · †Corresponding authors</small></div>
+      <div class="btns">
+        <a class="btn p" href="https://arxiv.org/pdf/2607.02403">Read the paper</a>
+        <a class="btn" href="https://arxiv.org/abs/2607.02403">arXiv</a>
+        <a class="btn" href="#bib">Cite</a>
+      </div>
+    </div>
+  </div>
+</div>
 
-<!-- Hero -->
-<section class="hero">
-  <div class="hero-body">
-    <div class="container is-max-desktop">
-      <div class="columns is-centered">
-        <div class="column has-text-centered">
-          <h1 class="title is-1 publication-title">
-            <span class="acid-brand">ACID</span><span class="acid-colon">:</span><br>
-            <span class="acid-subtitle">Action Consistency via Inverse Dynamics for Planning with World Models</span>
-          </h1>
+<!-- 01 ------------------------------------------------------------------ -->
+<section id="gap"><div class="wrap">
+  <div class="narrow">
+    <div class="num">01 · THE REALIZATION GAP</div>
+    <h2>Plans that only look right</h2>
+    <p class="lead">Standard planning scores a candidate only by how close its <b>predicted</b> final state is to the goal. Nothing checks whether each predicted step could actually be produced by its action.</p>
+    <p class="lead">Below, DINO-WM plans the same episode twice. The top tile in each pair is the <b>real</b> environment; the bottom tile is what the world model <b>imagined</b>, with the real object overlaid in magenta. Step through the plan and watch where they split.</p>
+  </div>
+  <div class="card f3" id="f3">
+    <div class="f3-ctl">
+      <button class="playbtn" id="f3play" aria-label="Play or pause">❚❚</button>
+      <div class="steps-seg" id="f3steps"></div>
+      <span class="note" style="margin-left:auto"><a href="#" id="f3full">View the full figure (Fig. 3)</a></span>
+    </div>
+    <div class="f3-head">
+      <span>Start <small>o₀</small></span>
+      <span>Original <small>c<sub>g</sub></small> <span class="verdict fail" data-v>✗ Fail</span></span>
+      <span>Ours <small>c<sub>g</sub> + w<sub>a</sub>c<sub>a</sub></small> <span class="verdict ok" data-v>✓ Success</span></span>
+      <span>Goal <small>o<sub>g</sub></small></span>
+    </div>
+    <div id="f3rows"></div>
+    <div class="key">
+      <div><b>Original</b>The imagined rope lies right on the goal line, but the real rope (magenta) stays where it was. The goal cost is satisfied by a future that can't happen.</div>
+      <div><b>Ours</b>Imagined and real coincide at every step, and the real rope reaches the goal.</div>
+      <div><b>Why</b>ACID rejects candidates whose predicted steps the inverse dynamics model can't explain with the commanded action.</div>
+    </div>
+  </div>
+  <dialog id="f3dlg"><img src="./static/figures/fig3/fig3_full.jpg" alt="Figure 3: qualitative comparison on Rope and Granular with DINO-WM"><form method="dialog" style="text-align:right;margin-top:8px"><button class="btn">Close</button></form></dialog>
+</div></section>
 
-          <div class="is-size-5 publication-authors">
-            <span class="author-block"><a href="https://gawon1224.github.io/" target="_blank" rel="noopener noreferrer">Gawon Seo</a><sup>1</sup>,</span>
-            <span class="author-block"><a href="https://kdwonn.github.io/" target="_blank" rel="noopener noreferrer">Dongwon Kim</a><sup>2</sup><sup>&dagger;</sup>,</span>
-            <span class="author-block"><a href="https://suhakwak.github.io/" target="_blank" rel="noopener noreferrer">Suha Kwak</a><sup>1</sup><sup>&dagger;</sup></span>
-          </div>
-
-          <div class="is-size-5 publication-authors">
-            <span class="author-block"><sup>1</sup>POSTECH,</span>
-            <span class="author-block"><sup>2</sup>KAIST</span>
-          </div>
-          <div class="is-size-7 publication-authors" style="margin-top: 0.2rem; color:#666;">
-            <span class="author-block"><sup>&dagger;</sup>Corresponding authors</span>
-          </div>
-
-          <div class="column has-text-centered">
-            <div class="publication-links">
-              <span class="link-block">
-                <a href="https://arxiv.org/abs/2607.02403"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon"><i class="ai ai-arxiv"></i></span>
-                  <span>arXiv</span>
-                </a>
-              </span>
-              <span class="link-block">
-                <a href="https://arxiv.org/pdf/2607.02403"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon"><i class="fas fa-file-pdf"></i></span>
-                  <span>Paper</span>
-                </a>
-              </span>
-              <span class="link-block">
-                <a class="external-link button is-normal is-rounded is-dark" disabled
-                   style="opacity: 0.7; cursor: not-allowed;">
-                  <span class="icon"><i class="fab fa-github"></i></span>
-                  <span>Code (coming soon)</span>
-                </a>
-              </span>
-              <span class="link-block">
-                <a href="#bibtex"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon"><i class="fas fa-quote-right"></i></span>
-                  <span>BibTeX</span>
-                </a>
-              </span>
-            </div>
-          </div>
+<!-- 02 ------------------------------------------------------------------ -->
+<section id="cycle"><div class="wrap">
+  <div class="narrow">
+    <div class="num">02 · CYCLE ACTION CONSISTENCY</div>
+    <h2>Close the cycle</h2>
+    <p class="lead">The true outcome of an action is unknown until it is executed, but the action itself is known. ACID moves the check into action space.</p>
+  </div>
+  <div class="cycle">
+    <div class="steps" id="steps">
+      <div class="step on" data-s="0"><h4>① Roll forward</h4><p>The world model F<sub>θ</sub> predicts the next latent ẑ<sub>t+1</sub> from ẑ<sub>t</sub> and the conditioning action <b class="b-ink">a<sub>t</sub></b>.</p></div>
+      <div class="step" data-s="1"><h4>② Infer backward</h4><p>An inverse dynamics model G<sub>ϕ</sub> reads the predicted transition (ẑ<sub>t</sub>, ẑ<sub>t+1</sub>) and infers the action <b class="o-ink">â<sub>t</sub></b> that explains it. A flow-matching decoder; one Euler step is enough.</p></div>
+      <div class="step" data-s="2"><h4>③ Compare</h4><p>If the step is realizable, â<sub>t</sub> recovers a<sub>t</sub>. Otherwise the residual ‖a<sub>t</sub> − â<sub>t</sub>‖² exposes the world model's error. Under locally linear dynamics it bounds that error from both sides (Prop. 1).</p></div>
+      <div class="step" data-s="3"><h4>④ Re-rank</h4><p>CEM minimizes c<sub>g</sub> + w<sub>a</sub>c<sub>a</sub>, with a scale-invariant weight w<sub>a</sub> = λ·σ<sub>g</sub>/σ<sub>a</sub> recomputed every iteration. The world model is never retrained.</p></div>
+    </div>
+    <div class="card cyc-svg">
+      <svg viewBox="0 0 500 300" id="cyc" role="img" aria-label="Cycle action consistency diagram">
+        <defs>
+          <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#2556d6"/></marker>
+          <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#e07b2e"/></marker>
+        </defs>
+        <g data-k="0 1 2 3"><circle cx="80" cy="150" r="30" fill="#f6f7f9" stroke="#475569"/><text x="80" y="156" text-anchor="middle" font-family="Inter" font-size="18" font-style="italic">ẑ<tspan font-size="12" dy="5">t</tspan></text></g>
+        <g data-k="0 1 2 3"><circle cx="380" cy="150" r="30" fill="#f6f7f9" stroke="#475569"/><text x="380" y="156" text-anchor="middle" font-family="Inter" font-size="18" font-style="italic">ẑ<tspan font-size="12" dy="5">t+1</tspan></text></g>
+        <g data-k="0 3"><path d="M115 130 Q230 70 345 130" fill="none" stroke="#2556d6" stroke-width="2.5" marker-end="url(#ab)"/>
+          <rect x="200" y="78" width="60" height="32" rx="7" fill="#e9efff" stroke="#2556d6"/><text x="230" y="100" text-anchor="middle" font-family="Inter" font-size="16" font-style="italic">F<tspan font-size="11" dy="4">θ</tspan></text></g>
+        <g data-k="0 2 3"><rect x="180" y="16" width="100" height="34" rx="17" fill="#fff" stroke="#2556d6"/><text x="230" y="38" text-anchor="middle" font-family="Inter" font-size="16" font-style="italic" fill="#2556d6">a<tspan font-size="11" dy="4">t</tspan></text>
+          <path d="M230 50 L230 76" stroke="#2556d6" stroke-width="2" marker-end="url(#ab)"/></g>
+        <g data-k="1 3"><path d="M345 172 Q230 232 115 172" fill="none" stroke="#e07b2e" stroke-width="2.5" marker-end="url(#ao)"/>
+          <rect x="200" y="190" width="60" height="32" rx="7" fill="#fdf0e6" stroke="#e07b2e"/><text x="230" y="212" text-anchor="middle" font-family="Inter" font-size="16" font-style="italic">G<tspan font-size="11" dy="4">ϕ</tspan></text></g>
+        <g data-k="1 2 3"><path d="M230 224 L230 248" stroke="#e07b2e" stroke-width="2" marker-end="url(#ao)"/><rect x="180" y="250" width="100" height="34" rx="17" fill="#fff" stroke="#e07b2e"/><text x="230" y="272" text-anchor="middle" font-family="Inter" font-size="16" font-style="italic" fill="#e07b2e">â<tspan font-size="11" dy="4">t</tspan></text></g>
+        <g data-k="2 3"><path d="M290 33 C 475 33, 475 267, 290 267" fill="none" stroke="#0f172a" stroke-dasharray="4 5" stroke-width="1.5"/>
+          <rect x="424" y="134" width="68" height="32" rx="6" fill="#0f172a"/><text x="458" y="155" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#fff">‖a−â‖²</text></g>
+      </svg>
+      <div class="eq" id="eq"></div>
+    </div>
+  </div>
+  <h3 class="sub">The full pipeline, step by step</h3>
+  <p class="note" style="margin:0 0 10px">Fig. 1, animated in the order of Algorithm 1. The highlighted modules are the ones running on the current line; after J CEM iterations the plan is executed and the loop starts again.</p>
+  <div class="card pipe" id="pipe">
+    <div class="pipe-fig">
+      <img src="../assets/img/ACID_teaser.png" alt="ACID overall pipeline (Fig. 1)">
+      <svg viewBox="0 0 1599 559" preserveAspectRatio="none" aria-hidden="true">
+        <defs><mask id="pipeMask"><rect width="1599" height="559" fill="#fff"/><g id="pipeHoles"></g></mask></defs>
+        <rect width="1599" height="559" fill="#fff" opacity=".78" mask="url(#pipeMask)"/>
+        <g id="pipeOutlines"></g>
+      </svg>
+    </div>
+    <div class="pipe-bottom">
+      <ol class="algo" id="algo"></ol>
+      <div class="pipe-side">
+        <div class="pipe-meta"><span class="chip on" id="pipeIter">CEM iteration j = 1 / 3</span><span class="note" id="pipeCount"></span></div>
+        <h4 id="pipeTitle"></h4>
+        <p id="pipeDesc"></p>
+        <div class="pipe-prog" id="pipeProg"></div>
+        <div class="pipe-ctl">
+          <button class="playbtn" id="pipePrev" aria-label="Previous step">⏮</button>
+          <button class="playbtn" id="pipePlay" aria-label="Play or pause">❚❚</button>
+          <button class="playbtn" id="pipeNext" aria-label="Next step">⏭</button>
         </div>
       </div>
     </div>
   </div>
-</section>
+</div></section>
 
-<!-- TL;DR -->
-<section class="hero" style="padding-top: 0; padding-bottom: 1.5rem;">
-  <div class="container is-max-desktop">
-    <div class="acid-tldr-box">
-      <p style="font-size: 1.18rem; line-height: 1.6;">
-        <span style="font-weight: bold; color: #333;">TL;DR:</span>
-        Decision-time planning scores a candidate only by how close its predicted
-        <i>final</i> state is to the goal, never checking that the route there is realizable.
-        ACID adds <mark class="acid-mark">cycle action consistency</mark>: an inverse dynamics model
-        infers the action behind each predicted transition, and its mismatch with the
-        conditioning action becomes a <mark class="acid-mark">per-step planning cost</mark> &mdash;
-        improving planning across four world models and six tasks with substantially less compute.
-      </p>
+<!-- 03 ------------------------------------------------------------------ -->
+<section id="results"><div class="wrap">
+  <div class="narrow">
+    <div class="num">03 · RESULTS</div>
+    <h2>Consistent gains on every world model</h2>
+    <p class="lead">Three JEPA-style latent world models, five simulated tasks. Only the planning cost changes; training and the CEM planner stay fixed.</p>
+  </div>
+  <div class="legend" style="margin-top:14px"><span><i style="background:var(--orig)"></i>Original (goal cost c<sub>g</sub>)</span><span><i style="background:var(--ours)"></i>Ours (c<sub>g</sub> + w<sub>a</sub>c<sub>a</sub>)</span><span style="color:var(--ink-3)">Mean ± std over three seeds (Table 1). Hover a bar for values.</span></div>
+  <div class="mh"><b>Success rate (%) <span style="color:var(--ink-3);font-weight:500">↑ higher is better</span></b></div>
+  <div class="metric-row three" id="rowSR"></div>
+  <div class="mh"><b>Chamfer distance <span style="color:var(--ink-3);font-weight:500">↓ lower is better</span></b></div>
+  <div class="metric-row two" id="rowCD"></div>
+
+  <div class="rail-head">
+    <div><h3 class="sub" style="margin-bottom:4px">Original vs. ours, side by side</h3>
+    <p class="note" style="margin:0">One card per task. Each Original/Ours pair is the same episode and world model, played in sync. Swipe or use the arrows.</p></div>
+    <div class="rail-ctl"><span class="note" id="railPos">1 / 8</span><button id="railPrev" aria-label="Previous rollout">←</button><button id="railNext" aria-label="Next rollout">→</button></div>
+  </div>
+  <div class="rail" id="rail"></div>
+</div></section>
+
+<!-- 04 ------------------------------------------------------------------ -->
+<section id="robot"><div class="wrap">
+  <div class="narrow">
+    <div class="num">04 · REAL ROBOT</div>
+    <h2>On a real robot arm</h2>
+    <p class="lead">Policy-guided planning on a PiPER arm with a single RGB camera. A Diffusion Policy proposes 20 action chunks and the planning cost picks one. Same policy, same world model, same candidates; only the cost differs.</p>
+  </div>
+  <div id="rtasks"></div>
+  <p class="note" style="text-align:center;margin:10px 0 0">One episode per method, played at 2×. All three rank the same 20 policy samples; only the planning cost differs.</p>
+  <div class="card rbars" id="rbars"></div>
+</div></section>
+
+<!-- 05 ------------------------------------------------------------------ -->
+<section id="compute"><div class="wrap">
+  <div class="narrow">
+    <div class="num">05 · COMPUTE</div>
+    <h2>Less compute</h2>
+    <p class="lead">ACID reaches the baseline's full-budget quality with far less search. On Reacher, 30 CEM samples already beat the baseline's 300. With DINO-WM, ACID reaches the baseline's final Chamfer distance in half the planning steps on Granular, and after the first step on Rope. The verifier itself adds about 12–15% per CEM iteration.</p>
+  </div>
+  <div class="compute-grid">
+    <div class="card chart" id="bud"></div>
+    <div class="card chart">
+      <h4 style="margin:0 0 2px;font-size:15px">Fewer planning steps · DINO-WM</h4>
+      <p class="note" style="margin:0 0 8px">Mean Chamfer distance over planning steps (lower is better). Orange dashed line: where Original ends after 10 steps.</p>
+      <div class="cd-pair"><div id="cdGran"></div><div id="cdRope"></div></div>
     </div>
   </div>
-</section>
+  <div class="ovh" id="ovh" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px"></div>
+</div></section>
 
-<!-- Teaser -->
-<section class="hero" style="padding-top: 1.5rem; padding-bottom: 1.5rem;">
-  <div class="container is-max-desktop">
-    <div class="hero-body" style="padding-top: 0.5rem; padding-bottom: 0.5rem;">
-      <img src="./static/figures/final_overall_architecture.png?v=2" alt="ACID overall architecture"
-           class="acid-figure-frame" style="width: 100%; height: auto;"
-           onerror="this.outerHTML='&lt;div class=\'fig-slot\'&gt;Figure 1 &mdash; overall architecture (add static/figures/final_overall_architecture.png)&lt;/div&gt;'">
-      <p class="caption">
-        <b>Overall architecture of ACID.</b> An MPC with CEM searches over candidate action sequences
-        <code>a<sub>0:H-1</sub></code> to minimize an augmented planning cost. The current observation
-        is encoded to <code>z<sub>0</sub></code>, and the world model <code>F<sub>&theta;</sub></code>
-        unrolls a latent trajectory. An inverse dynamics model <code>G<sub>&phi;</sub></code> then
-        takes each predicted transition <code>(&#x1E91;<sub>t</sub>, &#x1E91;<sub>t+1</sub>)</code> and
-        infers the action that would explain it. The augmented cost combines a <i>goal cost</i>
-        (predicted final latent close to the goal) with an <i>action consistency cost</i> (the predicted
-        trajectory is realizable in the environment).
-      </p>
-    </div>
-  </div>
-</section>
+<section id="bib"><div class="wrap">
+  <div style="display:flex;justify-content:space-between;align-items:end;margin-bottom:12px"><h2 style="margin:0">BibTeX</h2><button class="btn" id="copy">Copy</button></div>
+  <pre id="bibtex"></pre>
+</div></section>
+<footer>Released under <a href="http://creativecommons.org/licenses/by-sa/4.0/" rel="license">CC BY-SA 4.0</a>.</footer>
+<div class="tip" id="tip"></div>
 
-<!-- Abstract -->
-<section class="section" style="padding-top: 2.5rem;">
-  <div class="container is-max-desktop">
-    <div class="columns is-centered has-text-centered">
-      <div class="column is-four-fifths">
-        <h2 class="title is-3">Abstract</h2>
-        <div class="content has-text-justified">
-          <p>
-            Decision-time planning with action-conditioned world models has become a popular paradigm
-            for embodied control. However, the standard planning cost judges a candidate solely by how
-            close its predicted terminal state lies to the goal, leaving the <i>realizability</i> of the
-            intermediate transitions unchecked &mdash; a predicted trajectory can look convincing while
-            the environment rollout drifts away from it. In this paper, we propose <b>ACID</b>, a
-            decision-time planning framework that introduces <i>cycle action consistency</i>: the action
-            inferred backward from a predicted transition by an inverse dynamics model should recover the
-            one that was conditioned on. We fold this per-step residual into the planning cost via a
-            scale-invariant adaptive weight. Across four action-conditioned world models and six tasks
-            spanning rigid and deformable manipulation, articulated control, and visual navigation, ACID
-            consistently improves planning and matches the baseline's accuracy with substantially less
-            planning compute.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-</div><!-- /.acid-top-gradient -->
-
-<!-- Motivation -->
-<section class="section" style="padding-top: 0;">
-  <div class="container is-max-desktop">
-    <h2 class="title is-3 has-text-centered">The Realization Gap</h2>
-
-    <div style="margin: 0 auto 1.8rem auto;">
-      <img src="./static/figures/qual_dino_wm.png" alt="Real vs. imagined rollouts under the Original cost (DINO-WM)"
-           style="width: 100%; height: auto; border-radius: 8px; border: 1px solid #cfe0f7; background: #f7faff;">
-      <p class="caption" style="max-width: 900px;">
-        <b>A predicted trajectory can look convincing yet be unrealizable.</b> Under the standard
-        (<i>Original</i>) cost on DINO-WM, the <i>imagined</i> rollout reaches the goal, but the
-        <i>real</i> environment rollout &mdash; obtained by executing the same planned actions &mdash;
-        drifts away from it. The goal cost alone cannot detect this gap.
-      </p>
-    </div>
-
-    <p class="content has-text-justified" style="max-width: 820px; margin: 0 auto 1rem auto;">
-      Search-based planning samples candidate action sequences, simulates them through a world model,
-      and executes the one that minimizes a planning cost. But that cost, defined solely by the proximity
-      between the goal and the terminal state, <b>cannot see whether each transition is realizable</b> &mdash;
-      whether the conditioning action could actually produce it in the environment. Visual plausibility at
-      the end does not imply it: a planner can commit to an action sequence whose predicted goal-reaching
-      cannot be reproduced.
-    </p>
-    <p class="content has-text-justified" style="max-width: 820px; margin: 0 auto 0 auto;">
-      What makes realizability <i>measurable</i> is a property specific to embodied control: unlike a
-      caption that admits many valid images, a pair of consecutive observations strongly constrains the
-      action between them. So an inverse dynamics model (IDM) can tell whether each predicted step is
-      consistent with its conditioning action &mdash; and we repurpose the IDM as a
-      <mark class="acid-mark">decision-time verifier</mark> rather than the offline action decoder or
-      pseudo-labeler it has conventionally been.
-    </p>
-  </div>
-</section>
-
-<!-- Method -->
-<section class="section" style="padding-top: 3rem;">
-  <div class="container is-max-desktop">
-    <h2 class="title is-3 has-text-centered">Method</h2>
-    <p class="content has-text-centered" style="max-width: 800px; margin: 0 auto 2rem auto;">
-      ACID modifies <i>only</i> the planning cost. The world models are
-      left untouched, so ACID composes with any action-conditioned world model. It costs the
-      <i>whole trajectory</i> &mdash; not only its terminal state.
-    </p>
-
-    <div class="columns is-centered">
-      <div class="column is-half">
-        <div class="acid-card">
-          <h3 class="title is-4">Cycle Action Consistency</h3>
-          <p>
-            If a predicted transition <code>&#x1E91;<sub>t+1</sub> = F<sub>&theta;</sub>(&#x1E91;<sub>t</sub>, a<sub>t</sub>)</code>
-            truly reflects <code>a<sub>t</sub></code>, then the action an IDM infers from
-            <code>(&#x1E91;<sub>t</sub>, &#x1E91;<sub>t+1</sub>)</code> should recover it. The residual
-            vanishes exactly when the transition is the one <code>a<sub>t</sub></code> produces, and grows
-            as the prediction drifts.
-          </p>
-          <div class="acid-eq">
-            \( c_a(a_{0:H-1}) = \frac{1}{H}\sum_{t=0}^{H-1}\bigl\| a_t - G_\phi(\hat{z}_t, \hat{z}_{t+1}) \bigr\|_2^2 \)
-          </div>
-          <p class="acid-tag">Reuses the rollout already computed for the goal cost &mdash; no extra world-model rollout.</p>
-        </div>
-      </div>
-      <div class="column is-half">
-        <div class="acid-card">
-          <h3 class="title is-4">Scale-Invariant Adaptive Weight</h3>
-          <p>
-            CEM ranks candidates by spread, not absolute scale, and the relative spread of the two costs
-            varies across world models, tasks, and even CEM iterations. We equalize their spread at every
-            iteration so neither term dominates the ranking, leaving a single <code>&lambda;</code> to tune.
-          </p>
-          <div class="acid-eq">
-            \( w_a = \lambda \cdot \dfrac{\sigma_g}{\sigma_a}, \qquad
-               \sigma_g = \mathrm{std}_n\!\bigl(c_g^{(n)}\bigr),\;
-               \sigma_a = \mathrm{std}_n\!\bigl(c_a^{(n)}\bigr) \)
-          </div>
-          <p class="acid-tag"><code>&lambda;</code> is tuned once per world model and transfers across tasks.</p>
-        </div>
-      </div>
-    </div>
-
-    <p class="content has-text-centered" style="max-width: 820px; margin: 2rem auto 0.4rem auto;">
-      The augmented cost simply reranks the goal cost by realizability:
-    </p>
-    <div class="acid-eq" style="max-width: 560px; margin: 0.4rem auto;">
-      \( c(a_{0:H-1}) = \underbrace{\bigl\| \hat{z}_H - z_g \bigr\|_2^2}_{\text{goal cost } c_g}
-         \; + \; w_a \cdot c_a(a_{0:H-1}) \)
-    </div>
-    <p class="content has-text-centered" style="max-width: 820px; margin: 0.4rem auto 0 auto; color:#555;">
-      The planner then prefers sequences whose predicted trajectory both <i>reaches a goal-like state</i>
-      and <i>remains step-by-step realizable</i>.
-    </p>
-  </div>
-</section>
-
-<!-- Main results table -->
-<section class="section" style="padding-top: 3rem;">
-  <div class="container is-max-desktop">
-    <h2 class="title is-3 has-text-centered" style="margin-bottom: 1rem;">Main Results</h2>
-    <p class="content has-text-centered" style="max-width: 800px; margin: 0 auto 1.5rem auto;">
-      Success rate (%) on rigid manipulation, articulated control, and contact-rich pushing with the
-      <b>Le-WM</b> and <b>PLDM</b> JEPA-style world models. <i>Original</i> plans with the goal cost only;
-      <i>Ours</i> adds the action consistency cost. Parentheses: change over <i>Original</i>.
-      <span class="d-good" style="font-size: 1em;">Green</span>: improvement. Higher is better.
-    </p>
-
-    <div class="acid-table-wrap">
-      <table class="acid-table">
-        <thead>
-          <tr>
-            <th class="acid-task-col">World model</th>
-            <th>Planning cost</th>
-            <th>Cube</th>
-            <th>Reacher</th>
-            <th>PushT</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td rowspan="2"><b>Le-WM</b></td>
-            <td>Original</td>
-            <td>70.0</td><td>76.0</td><td>96.0</td>
-          </tr>
-          <tr>
-            <td>Ours</td>
-            <td><b>74.0</b><span class="d-good">(+4.0)</span></td>
-            <td><b>88.0</b><span class="d-good">(+12.0)</span></td>
-            <td><b>100.0</b><span class="d-good">(+4.0)</span></td>
-          </tr>
-          <tr>
-            <td rowspan="2"><b>PLDM</b></td>
-            <td>Original</td>
-            <td>58.0</td><td>76.0</td><td>72.0</td>
-          </tr>
-          <tr>
-            <td>Ours</td>
-            <td><b>68.0</b><span class="d-good">(+10.0)</span></td>
-            <td><b>90.0</b><span class="d-good">(+14.0)</span></td>
-            <td><b>76.0</b><span class="d-good">(+4.0)</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <p class="content has-text-centered" style="max-width: 800px; margin: 2.5rem auto 1.5rem auto;">
-      Deformable manipulation with <b>DINO-WM</b> (Chamfer distance) and goal-conditioned visual
-      navigation with <b>NWM trained with CompACT</b> (ATE / RPE). <b>Lower is better</b> for both.
-    </p>
-
-    <div class="columns is-centered">
-      <div class="column is-half">
-        <div class="acid-table-wrap">
-          <table class="acid-table">
-            <thead>
-              <tr><th>DINO-WM</th><th>Rope</th><th>Granular</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Original</td><td>1.38</td><td>0.49</td></tr>
-              <tr><td>Ours</td>
-                <td><b>0.56</b><span class="d-good">(&minus;0.82)</span></td>
-                <td><b>0.30</b><span class="d-good">(&minus;0.19)</span></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="column is-half">
-        <div class="acid-table-wrap">
-          <table class="acid-table">
-            <thead>
-              <tr><th>NWM w/ CompACT</th><th>ATE</th><th>RPE (trans.)</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Original</td><td>1.3141</td><td>0.3831</td></tr>
-              <tr><td>Ours</td>
-                <td><b>1.2835</b><span class="d-good">(&minus;2.3%)</span></td>
-                <td><b>0.3773</b><span class="d-good">(&minus;1.5%)</span></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    <p class="caption" style="text-align:center; margin-top: 1.2rem;">
-      Gains hold across four world models &mdash; three JEPA-style latent predictors (Le-WM, PLDM, DINO-WM)
-      and one video generative model (NWM) &mdash; and six tasks, from rigid and deformable object
-      manipulation to articulated control and visual navigation.
-    </p>
-  </div>
-</section>
-
-<!-- Why it works: qualitative -->
-<section class="section" style="padding-top: 3rem;">
-  <div class="container is-max-desktop">
-    <h2 class="title is-3 has-text-centered" style="margin-bottom: 1.5rem;">Why It Works: Filtering Unrealizable Trajectories</h2>
-
-    <p class="content has-text-justified" style="max-width: 820px; margin: 0 auto 1.5rem auto;">
-      The complex dynamics of deformable and granular media make many CEM candidate trajectories
-      non-realizable &mdash; precisely the failure mode the action consistency cost is designed for. Under
-      the <i>Original</i> cost, the planned action sequence reaches the goal in the model's
-      <i>predicted</i> trajectory but drifts away from it in the actual environment rollout, leaving the
-      goal cost satisfied by an unreachable future. Adding the action consistency cost
-      (<i>Ours</i>) removes this discrepancy: the real rollout closely tracks the predicted trajectory and
-      reaches the goal.
-    </p>
-
-    <!-- Le-WM -->
-    <div class="acid-qual-block">
-      <h3 class="acid-qual-wm">Le-WM</h3>
-      <div class="acid-qual-head">
-        <span class="acid-qual-labelcol"></span>
-        <div class="acid-qual-headcells">
-          <span>Baseline</span>
-          <span>Ours</span>
-        </div>
-      </div>
-
-      <div class="acid-qual-row">
-        <div class="acid-qual-tasklabel">OGBench-Cube</div>
-        <div class="acid-qual-cells">
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span></div><div class="qv-media"><video autoplay muted loop playsinline><source src="./static/videos/lewm/lewm_cube_original_rollout_32.mp4" type="video/mp4"></video></div></div></div><div class="acid-qual-celllab fail">Fail</div></div>
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span></div><div class="qv-media"><video autoplay muted loop playsinline><source src="./static/videos/lewm/lewm_cube_ours_rollout_32.mp4" type="video/mp4"></video></div></div></div><div class="acid-qual-celllab succ">Success</div></div>
-        </div>
-      </div>
-
-      <div class="acid-qual-row">
-        <div class="acid-qual-tasklabel">Reacher</div>
-        <div class="acid-qual-cells">
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span></div><div class="qv-media"><video autoplay muted loop playsinline><source src="./static/videos/lewm/lewm_reacher_original_rollout_20.mp4" type="video/mp4"></video></div></div></div><div class="acid-qual-celllab fail">Fail</div></div>
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span></div><div class="qv-media"><video autoplay muted loop playsinline><source src="./static/videos/lewm/lewm_reacher_ours_rollout_20.mp4" type="video/mp4"></video></div></div></div><div class="acid-qual-celllab succ">Success</div></div>
-        </div>
-      </div>
-
-      <div class="acid-qual-row">
-        <div class="acid-qual-tasklabel">Push-T</div>
-        <div class="acid-qual-cells">
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span></div><div class="qv-media"><video autoplay muted loop playsinline><source src="./static/videos/lewm/lewm_pusht_original_rollout_11.mp4" type="video/mp4"></video></div></div></div><div class="acid-qual-celllab fail">Fail</div></div>
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span></div><div class="qv-media"><video autoplay muted loop playsinline><source src="./static/videos/lewm/lewm_pusht_ours_rollout_11.mp4" type="video/mp4"></video></div></div></div><div class="acid-qual-celllab succ">Success</div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- PLDM -->
-    <div class="acid-qual-block">
-      <h3 class="acid-qual-wm">PLDM</h3>
-      <div class="acid-qual-head">
-        <span class="acid-qual-labelcol"></span>
-        <div class="acid-qual-headcells">
-          <span>Baseline</span>
-          <span>Ours</span>
-        </div>
-      </div>
-
-      <div class="acid-qual-row">
-        <div class="acid-qual-tasklabel">OGBench-Cube</div>
-        <div class="acid-qual-cells">
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span></div><div class="qv-media-pair"><video autoplay muted loop playsinline><source src="./static/videos/pldm/pldm_cube_original_env_29_fail.mp4" type="video/mp4"></video><img src="./static/figures/pldm/pldm-cube-goal.png" alt="OGBench-Cube goal"></div></div></div><div class="acid-qual-celllab fail">Fail</div></div>
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span></div><div class="qv-media-pair"><video autoplay muted loop playsinline><source src="./static/videos/pldm/pldm_cube_ours_env_29.mp4" type="video/mp4"></video><img src="./static/figures/pldm/pldm-cube-goal.png" alt="OGBench-Cube goal"></div></div></div><div class="acid-qual-celllab succ">Success</div></div>
-        </div>
-      </div>
-
-      <div class="acid-qual-row">
-        <div class="acid-qual-tasklabel">Reacher</div>
-        <div class="acid-qual-cells">
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span></div><div class="qv-media-pair"><video autoplay muted loop playsinline><source src="./static/videos/pldm/pldm_reacher_original_env_22_fail.mp4" type="video/mp4"></video><img src="./static/figures/pldm/pldm-reacher-goal.png" alt="Reacher goal"></div></div></div><div class="acid-qual-celllab fail">Fail</div></div>
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span></div><div class="qv-media-pair"><video autoplay muted loop playsinline><source src="./static/videos/pldm/pldm_reacher_ours_env_22.mp4" type="video/mp4"></video><img src="./static/figures/pldm/pldm-reacher-goal.png" alt="Reacher goal"></div></div></div><div class="acid-qual-celllab succ">Success</div></div>
-        </div>
-      </div>
-
-      <div class="acid-qual-row">
-        <div class="acid-qual-tasklabel">Push-T</div>
-        <div class="acid-qual-cells">
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span></div><div class="qv-media-pair"><video autoplay muted loop playsinline><source src="./static/videos/pldm/pldm_pusht_original_env_17_fail.mp4" type="video/mp4"></video><img src="./static/figures/pldm/pldm-pusht-goal.png" alt="Push-T goal"></div></div></div><div class="acid-qual-celllab fail">Fail</div></div>
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span></div><div class="qv-media-pair"><video autoplay muted loop playsinline><source src="./static/videos/pldm/pldm_pusht_ours_env_17.mp4" type="video/mp4"></video><img src="./static/figures/pldm/pldm-pusht-goal.png" alt="Push-T goal"></div></div></div><div class="acid-qual-celllab succ">Success</div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- DINO-WM -->
-    <div class="acid-qual-block">
-      <h3 class="acid-qual-wm">DINO-WM</h3>
-      <div class="acid-qual-head">
-        <span class="acid-qual-labelcol"></span>
-        <div class="acid-qual-headcells">
-          <span>Baseline</span>
-          <span>Ours</span>
-        </div>
-      </div>
-
-      <div class="acid-qual-row">
-        <div class="acid-qual-tasklabel">Granular</div>
-        <div class="acid-qual-cells">
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span><span>Imagined</span></div><div class="qv-media"><video autoplay muted loop playsinline><source src="./static/videos/dinowm/granular_20260525211750_output_final_0_failure.mp4" type="video/mp4"></video></div></div></div><div class="acid-qual-celllab fail">Fail</div></div>
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span><span>Imagined</span></div><div class="qv-media"><video autoplay muted loop playsinline><source src="./static/videos/dinowm/granular_20260523232732_output_final_0_failure.mp4" type="video/mp4"></video></div></div></div><div class="acid-qual-celllab succ">Success</div></div>
-        </div>
-      </div>
-
-      <div class="acid-qual-row">
-        <div class="acid-qual-tasklabel">Rope</div>
-        <div class="acid-qual-cells">
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span><span>Imagined</span></div><div class="qv-media"><video autoplay muted loop playsinline><source src="./static/videos/dinowm/rope_20260524205223_output_final_0_failure.mp4" type="video/mp4"></video></div></div></div><div class="acid-qual-celllab fail">Fail</div></div>
-          <div class="acid-qual-cell"><div class="qv-box"><div class="qv-colhead"><span class="qv-ch-spacer"></span><div class="qv-ch-cells"><span>Rollout</span><span>Goal</span></div></div><div class="qv-body"><div class="qv-rowhead"><span>Real</span><span>Imagined</span></div><div class="qv-media"><video autoplay muted loop playsinline><source src="./static/videos/dinowm/rope_20260523232751_output_final_0_failure.mp4" type="video/mp4"></video></div></div></div><div class="acid-qual-celllab succ">Success</div></div>
-        </div>
-      </div>
-    </div>
-
-    <p class="caption" style="text-align:center; max-width: 820px; margin: 1.6rem auto 0 auto;">
-      <b>Real environment rollouts vs. World model imagined rollouts.</b> Executing the planned action sequence in the environment, the
-      <i>Baseline</i> (goal cost only) drifts away from the goal, while <i>Ours</i> (with action
-      consistency) keeps the real rollout on track and reaches the goal &mdash; across three JEPA-style
-      latent world models (Le-WM, PLDM, DINO-WM) and their respective tasks.
-    </p>
-
-    <!-- NWM trained with CompACT: visual navigation -->
-    <div class="acid-qual-block" style="max-width: 100%; margin-top: 3rem;">
-      <h3 class="acid-qual-wm">NWM trained with CompACT</h3>
-      <img src="./static/figures/qual_nwm.png" alt="Qualitative results on goal-conditioned visual navigation"
-           style="width: 100%; height: auto; border-radius: 8px; border: 1px solid #cfe0f7; background: #f7faff;">
-      <p class="caption" style="max-width: 900px;">
-        <b>Qualitative results on goal-conditioned visual navigation.</b> Comparison between ground-truth
-        frames and world model rollouts. The action consistency score from ACID (<i>top</i>) and navigation
-        trajectories (<i style="color:#147837;">green</i>) are presented together. Red box highlights the step
-        where the action consistency cost drops; at this step, the predicted next frame fails to follow the
-        action condition.
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- Robustness -->
-<section class="section" style="padding-top: 3rem;">
-  <div class="container is-max-desktop">
-    <h2 class="title is-3 has-text-centered" style="margin-bottom: 1.5rem;">Robust to Budget, &lambda;, and Cost Scale</h2>
-
-    <p class="content has-text-justified" style="max-width: 820px; margin: 0 auto 1.5rem auto;">
-      Sweeping the CEM budget from 30 to 300 samples, <i>Ours</i> outperforms <i>Original</i> at
-      <b>every</b> budget and never falls below the baseline. Sweeping <code>&lambda;</code> across nearly
-      two orders of magnitude (0.005&ndash;0.1) yields consistent gains, so no careful per-task tuning is
-      needed. Below, a constant weight cannot win everywhere &mdash; no single value improves all three
-      tasks &mdash; whereas the scale-invariant adaptive weight yields the largest total improvement.
-    </p>
-
-    <div class="columns is-vcentered is-centered" style="max-width: 900px; margin: 0 auto;">
-      <div class="column is-half">
-        <h3 class="title is-6 has-text-centered" style="margin-bottom: 0.7rem; color:#444;">
-          CEM budget sweep on Reacher (success rate %)</h3>
-        <div class="acid-table-wrap">
-          <table class="acid-table">
-            <thead>
-              <tr><th>N =</th><th>30</th><th>50</th><th>150</th><th>300</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Le-WM &mdash; Original</td><td>68</td><td>62</td><td>70</td><td>76</td></tr>
-              <tr><td>Le-WM &mdash; Ours</td>
-                <td><b>82</b></td><td><b>76</b></td><td><b>78</b></td><td><b>88</b></td></tr>
-              <tr><td>PLDM &mdash; Original</td><td>58</td><td>66</td><td>70</td><td>76</td></tr>
-              <tr><td>PLDM &mdash; Ours</td>
-                <td><b>78</b></td><td><b>84</b></td><td><b>82</b></td><td><b>84</b></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="caption" style="text-align:center;">
-          On Le-WM and PLDM, <i>Ours</i> at the smallest budget (<code>N=30</code>) already matches the
-          full-budget <i>Original</i> (<code>N=300</code>).
-        </p>
-      </div>
-      <div class="column is-half">
-        <h3 class="title is-6 has-text-centered" style="margin-bottom: 0.7rem; color:#444;">
-          Constant vs. adaptive weight on Le-WM (&Delta; over Original)</h3>
-        <div class="acid-table-wrap">
-          <table class="acid-table">
-            <thead>
-              <tr><th>Task</th><th>Constant w<sub>a</sub>=1</th><th>=5</th><th>=10</th><th>Ours</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Cube</td><td>+0.0</td><td>+0.0</td><td>+2.0</td><td><b>+4.0</b></td></tr>
-              <tr><td>PushT</td><td>+0.0</td><td>&minus;2.0</td><td>+2.0</td><td><b>+4.0</b></td></tr>
-              <tr><td>Reacher</td><td>+14.0</td><td>&minus;2.0</td><td>+6.0</td><td><b>+12.0</b></td></tr>
-              <tr class="acid-section-row"><td>Total &Delta;</td><td>+14.0</td><td>&minus;4.0</td><td>+10.0</td><td><b>+20.0</b></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="caption" style="text-align:center;">
-          No single constant weight improves all three tasks; the adaptive weight removes the dependence
-          and yields the largest total gain.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Efficiency -->
-<section class="section" style="padding-top: 3rem;">
-  <div class="container is-max-desktop">
-    <h2 class="title is-3 has-text-centered" style="margin-bottom: 1.5rem;">Less Total Compute to Target Quality</h2>
-
-    <p class="content has-text-justified" style="max-width: 820px; margin: 0 auto 1.5rem auto;">
-      The verifier is lightweight: a single Euler step of the flow-matching IDM adds only a
-      <b>small fraction</b> of the world-model forward latency per CEM iteration, and reuses the trajectory
-      already rolled out for the goal cost. Despite this modest per-step overhead, ACID reaches the
-      baseline's final Chamfer distance in <b>less than half</b> the planning steps &mdash; a net compute of
-      roughly <b>0.7&times;</b> to match baseline quality. Because total planning compute scales with both
-      the number of CEM samples and planning steps, reducing either factor directly lowers cost, and
-      <i>Ours</i> reaches a given quality with strictly less compute along both axes.
-    </p>
-
-    <div style="max-width: 78%; margin: 0 auto;">
-      <img src="./static/figures/dinowm_chamfer.png" alt="Mean Chamfer distance over planning steps"
-           style="width: 100%; height: auto;"
-           onerror="this.outerHTML='&lt;div class=\'fig-slot\'&gt;Chamfer distance over planning steps (Granular &amp; Rope) &mdash; add static/figures/dinowm_chamfer.png&lt;/div&gt;'">
-      <p class="caption" style="text-align:center; max-width: 100%;">
-        <b>Mean Chamfer distance over planning steps on Granular and Rope.</b> <i>Ours</i> reaches
-        <i>Original</i>'s late-step plateau several steps earlier on Granular, and already at the very first
-        planning step on Rope.
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- BibTeX -->
-<section class="section" id="bibtex" style="padding-top: 0;">
-  <div class="container is-max-desktop content">
-    <h2 class="title is-3 has-text-centered">BibTeX</h2>
-    <pre style="background:#f5f5f5; border-radius:6px; padding:1rem;"><code>@article{seo2026acid,
-  title     = {ACID: Action Consistency via Inverse Dynamics for Planning with World Models},
-  author    = {Seo, Gawon and Kim, Dongwon and Kwak, Suha},
-  journal   = {arXiv preprint arXiv:2607.02403},
-  year      = {2026}
-}</code></pre>
-  </div>
-</section>
-
-<footer class="footer" style="padding: 2rem 1.5rem;">
-  <div class="container">
-    <div class="columns is-centered">
-      <div class="column is-8 has-text-centered">
-        <div class="content">
-          <p>
-            Website template adapted from <a href="https://nerfies.github.io/">Nerfies</a>.
-            Released under
-            <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</footer>
-
-<!-- Ensure all qualitative videos autoplay and loop (some browsers defer autoplay) -->
 <script>
-  (function () {
-    function kick(v) {
-      v.muted = true;
-      v.setAttribute('muted', '');
-      v.loop = true;
-      var p = v.play();
-      if (p && p.catch) { p.catch(function () {}); }
-    }
-    function initVideos() {
-      var vids = document.querySelectorAll('.acid-qual-cell video');
-      vids.forEach(function (v) {
-        v.addEventListener('loadeddata', function () { kick(v); });
-        v.addEventListener('ended', function () { v.currentTime = 0; kick(v); });
-        if (v.readyState >= 2) { kick(v); }
-      });
-      if ('IntersectionObserver' in window) {
-        var io = new IntersectionObserver(function (entries) {
-          entries.forEach(function (e) { if (e.isIntersecting) { kick(e.target); } });
-        }, { threshold: 0.1 });
-        vids.forEach(function (v) { io.observe(v); });
-      }
-    }
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initVideos);
-    } else {
-      initVideos();
-    }
-  })();
-</script>
+// Numbers transcribed from the ACID paper (ICLR27_ACID.pdf). Shared by all three mockups.
+window.ACID = {
+  title: "ACID: Action Consistency via Inverse Dynamics for Planning with World Models",
+  authors: [
+    { name: "Gawon Seo", url: "https://gawon1224.github.io/", aff: "1" },
+    { name: "Dongwon Kim", url: "https://kdwonn.github.io/", aff: "2", corr: true },
+    { name: "Suha Kwak", url: "https://suhakwak.github.io/", aff: "1", corr: true },
+  ],
+  affs: { 1: "POSTECH", 2: "KAIST" },
+  links: { paper: "https://arxiv.org/pdf/2607.02403", arxiv: "https://arxiv.org/abs/2607.02403" },
 
+  // Table 1 — success rate (%) on Cube / Reacher / PushT, Chamfer distance on Rope / Granular.
+  tasks: [
+    { key: "cube", name: "Cube", metric: "Success rate (%)", higher: true },
+    { key: "reacher", name: "Reacher", metric: "Success rate (%)", higher: true },
+    { key: "pusht", name: "PushT", metric: "Success rate (%)", higher: true },
+    { key: "rope", name: "Rope", metric: "Chamfer distance", higher: false },
+    { key: "granular", name: "Granular", metric: "Chamfer distance", higher: false },
+  ],
+  table1: {
+    "Le-WM": {
+      orig: [[68.0, 5.3], [75.3, 2.3], [92.7, 3.1], [1.79, 0.07], [0.59, 0.02]],
+      ours: [[79.3, 3.1], [82.0, 2.0], [94.0, 2.0], [1.26, 0.21], [0.43, 0.04]],
+    },
+    PLDM: {
+      orig: [[56.0, 2.0], [75.3, 3.1], [74.7, 3.1], [1.95, 0.10], [0.60, 0.09]],
+      ours: [[68.0, 2.0], [82.7, 3.1], [78.7, 1.2], [1.38, 0.03], [0.49, 0.09]],
+    },
+    "DINO-WM": {
+      orig: [[76.7, 2.3], [67.3, 3.1], [75.3, 6.1], [1.32, 0.08], [0.46, 0.02]],
+      ours: [[81.3, 6.1], [68.0, 5.3], [76.7, 6.1], [0.65, 0.07], [0.34, 0.04]],
+    },
+  },
+
+  // Table 2 — real robot, successes out of 15.
+  robot: [
+    { label: "Diffusion Policy", pickplace: 7, bowlstack: 8 },
+    { label: "+ World model (Original)", pickplace: 11, bowlstack: 11 },
+    { label: "+ IDM (Ours)", pickplace: 14, bowlstack: 14 },
+  ],
+
+  // Real-robot rollouts (PiPER arm), one episode per method. Outcomes read off the videos.
+  robotVideos: {
+    pickplace: {
+      name: "PickPlace", desc: "Place the bowl on the plate.",
+      runs: [
+        { label: "Diffusion Policy", short: "Policy", src: "./static/videos/robot/pickplaceDP.mp4", ok: false, note: "Misses the bowl and moves to the plate empty-handed." },
+        { label: "+ World model (Original)", short: "+ WM", src: "./static/videos/robot/pickplaceDPWM.mp4", ok: false, note: "Reranked by the goal cost only. Still closes on air." },
+        { label: "+ IDM (ACID)", short: "+ ACID", src: "./static/videos/robot/pickplaceACID.mp4", ok: true, note: "Grasps the bowl and sets it on the plate." },
+      ],
+    },
+    bowlstack: {
+      name: "BowlStack", desc: "Stack one bowl on top of the other.",
+      runs: [
+        { label: "Diffusion Policy", short: "Policy", src: "./static/videos/robot/bowlstackDP.mp4", ok: false, note: "Hovers over the gray bowl and never picks up the white one." },
+        { label: "+ World model (Original)", short: "+ WM", src: "./static/videos/robot/bowlstackDPWM.mp4", ok: false, note: "Reaches the white bowl but does not lift it." },
+        { label: "+ IDM (ACID)", short: "+ ACID", src: "./static/videos/robot/bowlstackACID.mp4", ok: true, note: "Lifts the white bowl and stacks it into the gray one." },
+      ],
+    },
+  },
+
+  // Table 3 — Reacher success rate (%), CEM budget sweep (λ = 0.07).
+  budget: {
+    N: [30, 50, 150, 300],
+    "Le-WM": { orig: [68, 62, 70, 76], ours: [82, 76, 78, 88] },
+    PLDM: { orig: [58, 66, 70, 76], ours: [78, 84, 82, 84] },
+  },
+
+  // Table 9 — per-iteration latency (ms).
+  latency: [
+    { model: "Le-WM", wm: 17.54, idm: 2.54, pct: 14.5 },
+    { model: "PLDM", wm: 17.33, idm: 2.51, pct: 14.5 },
+    { model: "DINO-WM", wm: 2080.5, idm: 245.25, pct: 11.8 },
+  ],
+
+  // Table 6 — NWM w/ CompACT on RECON navigation (lower is better).
+  nwm: { ate: [1.3141, 1.2835], rpe: [0.3831, 0.3773] },
+
+  // Videos: paths are relative to ACID/mockups/.
+  videos: {
+    "Le-WM": {
+      layout: "rollout|goal",
+      cube: ["./static/videos/lewm/lewm_cube_original_rollout_32.mp4", "./static/videos/lewm/lewm_cube_ours_rollout_32.mp4"],
+      reacher: ["./static/videos/lewm/lewm_reacher_original_rollout_20.mp4", "./static/videos/lewm/lewm_reacher_ours_rollout_20.mp4"],
+      pusht: ["./static/videos/lewm/lewm_pusht_original_rollout_11.mp4", "./static/videos/lewm/lewm_pusht_ours_rollout_11.mp4"],
+    },
+    PLDM: {
+      layout: "rollout+goalimg",
+      cube: ["./static/videos/pldm/pldm_cube_original_env_29_fail.mp4", "./static/videos/pldm/pldm_cube_ours_env_29.mp4", "./static/figures/pldm/pldm-cube-goal.png"],
+      reacher: ["./static/videos/pldm/pldm_reacher_original_env_22_fail.mp4", "./static/videos/pldm/pldm_reacher_ours_env_22.mp4", "./static/figures/pldm/pldm-reacher-goal.png"],
+      pusht: ["./static/videos/pldm/pldm_pusht_original_env_17_fail.mp4", "./static/videos/pldm/pldm_pusht_ours_env_17.mp4", "./static/figures/pldm/pldm-pusht-goal.png"],
+    },
+    "DINO-WM": {
+      layout: "real/imagined × rollout|goal",
+      rope: ["./static/videos/dinowm/rope_20260524205223_output_final_0_failure.mp4", "./static/videos/dinowm/rope_20260523232751_output_final_0_failure.mp4"],
+      granular: ["./static/videos/dinowm/granular_20260525211750_output_final_0_failure.mp4", "./static/videos/dinowm/granular_20260523232732_output_final_0_failure.mp4"],
+    },
+  },
+
+  bibtex: `@article{seo2026acid,
+  title   = {ACID: Action Consistency via Inverse Dynamics for Planning with World Models},
+  author  = {Seo, Gawon and Kim, Dongwon and Kwak, Suha},
+  journal = {arXiv preprint arXiv:2607.02403},
+  year    = {2026}
+}`,
+};
+</script>
+<script>
+const D = window.ACID, $ = (s) => document.querySelector(s), tip = $("#tip");
+const showTip = (e, h) => { tip.innerHTML = h; tip.style.opacity = 1; tip.style.left = Math.min(e.clientX + 14, innerWidth - 220) + "px"; tip.style.top = e.clientY + 14 + "px"; };
+const hideTip = () => tip.style.opacity = 0;
+$("#authors").innerHTML = D.authors.map(a => `<a href="${a.url}" target="_blank" rel="noopener">${a.name}<sup>${a.aff}${a.corr ? "†" : ""}</sup></a>`).join("");
+$("#bibtex").textContent = D.bibtex;
+$("#copy").onclick = () => navigator.clipboard.writeText(D.bibtex).then(() => { $("#copy").textContent = "Copied ✓"; setTimeout(() => $("#copy").textContent = "Copy", 1400); });
+
+// ---------- 01: Fig. 3 step-through ----------
+const F3 = "./static/figures/fig3/", STEPS = [1, 4, 7, 10];
+const TASKS3 = [{ k: "rope", n: "Rope" }, { k: "granular", n: "Granular" }];
+$("#f3rows").innerHTML = TASKS3.map(t => `<div class="f3-row">
+  <div class="f3-task">${t.n}</div>
+  <div class="f3-big" data-l="Start"><img src="${F3}${t.k}_start.jpg" alt="${t.n} start"></div>
+  ${["orig", "ours"].map(p => `<div class="f3-pair ${p}" data-l="${p === "orig" ? "Original · goal cost only" : "Ours · + action consistency"}">
+    <div class="f3-cell"><div class="lab">Real<small>o<sub>t</sub></small></div><img data-t="${t.k}" data-p="${p}" data-r="real" alt="${t.n} ${p} real"></div>
+    <div class="f3-cell"><div class="lab">Imagined<small>ô<sub>t</sub></small></div><img data-t="${t.k}" data-p="${p}" data-r="imag" alt="${t.n} ${p} imagined"></div>
+  </div>`).join("")}
+  <div class="f3-big" data-l="Goal"><img src="${F3}${t.k}_goal.jpg" alt="${t.n} goal"></div>
+</div>`).join("");
+// Preload every frame so stepping doesn't flicker.
+TASKS3.forEach(t => ["orig", "ours"].forEach(p => ["real", "imag"].forEach(r => STEPS.forEach(s => { new Image().src = `${F3}${t.k}_${p}_${r}_${s}.jpg`; }))));
+let f3i = 0, f3timer = null;
+$("#f3steps").innerHTML = STEPS.map((s, i) => `<button data-i="${i}">t = ${s}</button>`).join("");
+function f3set(i) {
+  f3i = i;
+  document.querySelectorAll("#f3steps button").forEach(b => b.classList.toggle("on", +b.dataset.i === i));
+  document.querySelectorAll("#f3rows img[data-t]").forEach(img => img.src = `${F3}${img.dataset.t}_${img.dataset.p}_${img.dataset.r}_${STEPS[i]}.jpg`);
+  document.querySelectorAll("[data-v]").forEach(v => v.style.visibility = i === STEPS.length - 1 ? "visible" : "hidden");
+}
+function f3play(on) {
+  clearInterval(f3timer); f3timer = null;
+  $("#f3play").textContent = on ? "❚❚" : "▶";
+  if (on) f3timer = setInterval(() => f3set((f3i + 1) % STEPS.length), 1400);
+}
+document.querySelectorAll("#f3steps button").forEach(b => b.onclick = () => { f3play(false); f3set(+b.dataset.i); });
+$("#f3play").onclick = () => f3play(!f3timer);
+$("#f3full").onclick = (e) => { e.preventDefault(); $("#f3dlg").showModal(); };
+f3set(0); f3play(true);
+
+// ---------- 02: cycle stepper ----------
+const eqs = [
+  "ẑ<sub>t+1</sub> = F<sub>θ</sub>(ẑ<sub>t</sub>, <span class='b-ink'>a<sub>t</sub></span>)",
+  "<span class='o-ink'>â<sub>t</sub></span> = G<sub>ϕ</sub>(ẑ<sub>t</sub>, ẑ<sub>t+1</sub>)",
+  "c<sub>a</sub> = ¹⁄<sub>H</sub> Σ<sub>t</sub> ‖a<sub>t</sub> − â<sub>t</sub>‖²",
+  "min c<sub>g</sub> + w<sub>a</sub>c<sub>a</sub>,  w<sub>a</sub> = λ·σ<sub>g</sub>/σ<sub>a</sub>",
+];
+function setStep(s) {
+  document.querySelectorAll(".step").forEach(el => el.classList.toggle("on", +el.dataset.s === s));
+  document.querySelectorAll("#cyc g[data-k]").forEach(g => g.classList.toggle("dim", !g.dataset.k.split(" ").includes(String(s))));
+  $("#eq").innerHTML = eqs[s];
+}
+document.querySelectorAll(".step").forEach(el => {
+  el.onclick = () => setStep(+el.dataset.s);
+  if ("IntersectionObserver" in window) new IntersectionObserver((es) => es.forEach(e => e.isIntersecting && setStep(+el.dataset.s)), { rootMargin: "-45% 0px -45% 0px" }).observe(el);
+});
+setStep(0);
+
+// ---------- 02b: Fig. 1 animated in Algorithm 1 order ----------
+(function pipeline() {
+  // Module boxes in Fig. 1 pixel coordinates (image is 1599 × 559).
+  const R = {
+    o0: [4, 146, 132, 272], E0: [132, 150, 204, 266], z0: [234, 186, 288, 240],
+    og: [1452, 134, 1566, 244], Eg: [1380, 140, 1454, 238], zg: [1290, 168, 1352, 234],
+    arow: [256, 8, 1118, 108], ahrow: [256, 450, 1118, 550],
+    a: [[270, 12, 408, 104], [476, 12, 614, 104], [820, 12, 1016, 104]],
+    F: [[322, 168, 408, 250], [528, 168, 615, 250], [930, 168, 1017, 250]],
+    zin: [[234, 186, 288, 240], [440, 186, 504, 240], [788, 186, 892, 240]],
+    zout: [[440, 186, 504, 240], [646, 186, 702, 240], [1048, 186, 1114, 240]],
+    wires: [[254, 238, 476, 356], [460, 238, 686, 356], [834, 238, 1090, 356]],
+    G: [[322, 308, 408, 390], [528, 308, 615, 390], [930, 308, 1017, 390]],
+    ah: [[270, 450, 408, 550], [476, 450, 614, 550], [820, 450, 1016, 550]],
+    goal: [1162, 126, 1590, 338], cons: [1162, 340, 1590, 548], min: [1150, 6, 1594, 110], back: [1110, 36, 1162, 82],
+  };
+  const C = { enc: "#64748b", wm: "#2556d6", idm: "#e07b2e", cost: "#7c3aed" };
+  const tl = ["0", "1", "H−1"];
+  const ALGO = [
+    ["z₀ ← E(o₀),  z_g ← E(o_g)", "encode", 0],
+    ["for j = 1 … J do", "CEM iterations", 0],
+    ["sample N sequences a₀:H−1 ~ N(μ, Σ)", "", 1],
+    ["for t = 0 … H−1 do", "", 1],
+    ["ẑ_t+1 ← F_θ(ẑ_t, a_t)", "world model", 2],
+    ["â_t ← G_ϕ(ẑ_t, ẑ_t+1)", "IDM", 2],
+    ["c_g ← ‖ẑ_H − z_g‖²", "goal cost", 1],
+    ["c_a ← ¹⁄H Σ_t ‖a_t − â_t‖²", "consistency", 1],
+    ["w_a ← λ·σ_g/σ_a;  c ← c_g + w_a·c_a", "", 1],
+    ["μ, Σ ← fit to top-K elites of c", "", 1],
+    ["return μ_J → execute, replan (MPC)", "", 0],
+  ];
+  const J = 3;
+  const S = [];
+  S.push({ line: 0, ms: 2200, title: "Encode the start and the goal", desc: "The encoder E<sub>θ</sub> maps the current observation o₀ and the goal image o<sub>g</sub> to latents z₀ and z<sub>g</sub>. This happens once per planning call.", hl: [["o0", "enc"], ["E0", "enc"], ["z0", "enc"], ["og", "enc"], ["Eg", "enc"], ["zg", "enc"]] });
+  S.push({ line: 2, ms: 1800, iter: true, title: "Sample candidate action sequences", desc: "CEM draws N candidate action sequences a<sub>0:H−1</sub> from its current Gaussian. Every candidate goes through the steps below in parallel.", hl: [["arow", "wm"]] });
+  for (let t = 0; t < 3; t++) {
+    S.push({ line: 4, ms: 1100, title: `Roll forward, t = ${tl[t]}`, desc: `The world model F<sub>θ</sub> predicts ẑ<sub>${t === 2 ? "H" : t + 1}</sub> from ẑ<sub>${tl[t]}</sub> and the conditioning action a<sub>${tl[t]}</sub>.`, hl: [[R.a[t], "wm"], [R.F[t], "wm"], [R.zin[t], "wm"], [R.zout[t], "wm"]] });
+    S.push({ line: 5, ms: 1100, title: `Infer the action back, t = ${tl[t]}`, desc: `The IDM G<sub>ϕ</sub> reads the predicted transition (ẑ<sub>${tl[t]}</sub>, ẑ<sub>${t === 2 ? "H" : t + 1}</sub>) and infers â<sub>${tl[t]}</sub>, the action that explains it. No extra world-model rollout is needed.`, hl: [[R.zin[t], "idm"], [R.zout[t], "idm"], [R.wires[t], "idm", "hole"], [R.G[t], "idm"], [R.ah[t], "idm"]] });
+  }
+  S.push({ line: 6, ms: 1900, title: "Goal cost", desc: "How close the predicted final latent ẑ<sub>H</sub> lands to the encoded goal z<sub>g</sub>. This is all the standard planner looks at.", hl: [[R.zout[2], "cost"], ["goal", "cost"]] });
+  S.push({ line: 7, ms: 2200, title: "Action consistency cost", desc: "The per-step gap between each conditioning action a<sub>t</sub> (blue) and the action â<sub>t</sub> the IDM recovered (orange). A large gap means the predicted step is not realizable.", hl: [["arow", "wm"], ["ahrow", "idm"], ["cons", "cost"]] });
+  S.push({ line: 8, ms: 2000, title: "Scale-invariant augmented cost", desc: "w<sub>a</sub> = λ·σ<sub>g</sub>/σ<sub>a</sub> matches the spread of the two costs across candidates at every iteration, so a single λ works across models and tasks.", hl: [["min", "cost"], ["goal", "cost"], ["cons", "cost"]] });
+  S.push({ line: 9, ms: 2000, title: "Refit to the elites", desc: "CEM keeps the K candidates with the lowest augmented cost and refits μ, Σ to them. The next iteration samples around plans that are both goal-reaching and realizable.", hl: [["min", "cost"], ["back", "cost"], ["arow", "wm"]] });
+  const ITER_START = 1, ITER_END = S.length - 1;
+  S.push({ line: 10, ms: 2200, title: "Execute and replan", desc: "After J iterations the mean sequence μ<sub>J</sub> is executed in the environment (MPC), and planning starts again from the new observation.", hl: [["arow", "wm"]] });
+
+  const box = (k) => typeof k === "string" ? R[k] : k;
+  $("#algo").innerHTML = ALGO.map(([code, c, ind]) => `<li class="i${ind}"><span>${code}</span>${c ? `<span class="c">▷ ${c}</span>` : ""}</li>`).join("");
+  const lines = [...document.querySelectorAll("#algo li")];
+  // Progress shows one CEM iteration's worth of steps plus encode/return.
+  $("#pipeProg").innerHTML = S.map((_, i) => `<i data-i="${i}" title="Step ${i + 1}"></i>`).join("");
+  const prog = [...document.querySelectorAll("#pipeProg i")];
+
+  let i = 0, j = 1, timer = null, playing = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function render() {
+    const s = S[i];
+    $("#pipeHoles").innerHTML = s.hl.map(([k]) => { const [x0, y0, x1, y1] = box(k); return `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="12" fill="#000"/>`; }).join("");
+    $("#pipeOutlines").innerHTML = s.hl.filter(h => h[2] !== "hole").map(([k, c]) => { const [x0, y0, x1, y1] = box(k); const r = `x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="12" stroke="${C[c]}"`; return `<rect class="ol glow" ${r}/><rect class="ol" ${r}/>`; }).join("");
+    lines.forEach((li, k) => li.classList.toggle("on", k === s.line));
+    prog.forEach((p, k) => { p.classList.toggle("on", k === i); p.classList.toggle("done", k < i); });
+    $("#pipeTitle").innerHTML = s.title;
+    $("#pipeDesc").innerHTML = s.desc;
+    const inIter = i >= ITER_START && i <= ITER_END;
+    $("#pipeIter").textContent = inIter ? `CEM iteration j = ${j} / ${J}` : (i === 0 ? "Planning call starts" : "Planning call ends");
+    $("#pipeCount").textContent = `Step ${i + 1} of ${S.length}`;
+  }
+  function advance(dir) {
+    if (dir > 0) {
+      if (i === ITER_END && j < J) { j++; i = ITER_START; }          // back to "sample" for the next CEM iteration
+      else if (i === S.length - 1) { i = 0; j = 1; }                  // replan: loop forever
+      else i++;
+    } else {
+      if (i === ITER_START && j > 1) { j--; i = ITER_END; }
+      else if (i > 0) i--;
+    }
+    render();
+  }
+  function schedule() {
+    clearTimeout(timer);
+    if (!playing) return;
+    // Later CEM iterations run a little faster so the loop doesn't drag.
+    const ms = S[i].ms * (j > 1 && i >= ITER_START && i <= ITER_END ? 0.6 : 1);
+    timer = setTimeout(() => { advance(1); schedule(); }, ms);
+  }
+  function setPlaying(p) { playing = p; $("#pipePlay").textContent = p ? "❚❚" : "▶"; schedule(); }
+  $("#pipePlay").onclick = () => setPlaying(!playing);
+  $("#pipeNext").onclick = () => { setPlaying(false); advance(1); };
+  $("#pipePrev").onclick = () => { setPlaying(false); advance(-1); };
+  prog.forEach(p => p.onclick = () => { setPlaying(false); i = +p.dataset.i; render(); });
+  render(); setPlaying(playing);
+})();
+
+// ---------- 03: per-task grouped bar charts (all models at once) ----------
+const MODELS = Object.keys(D.table1);
+function taskChart(i) {
+  const task = D.tasks[i], max = task.higher ? 100 : 2.2, ticks = task.higher ? [0, 25, 50, 75, 100] : [0, 0.5, 1, 1.5, 2];
+  const w = 340, h = 210, l = 30, r = 4, tp = 26, bt = 26, gw = (w - l - r) / MODELS.length, bw = 22, gap = 2;
+  const Y = (v) => tp + (1 - v / max) * (h - tp - bt);
+  let g = "";
+  ticks.forEach(v => g += `<line x1="${l}" x2="${w - r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#eef1f5"/><text x="${l - 6}" y="${Y(v) + 4}" text-anchor="end">${v}</text>`);
+  MODELS.forEach((m, k) => {
+    const cx = l + gw * k + gw / 2, o = D.table1[m].orig[i], u = D.table1[m].ours[i];
+    [[o, "#a3abb8", cx - bw - gap / 2, "Original"], [u, "#2556d6", cx + gap / 2, "Ours"]].forEach(([v, c, x, n]) => {
+      const y = Y(v[0]), base = Y(0);
+      g += `<path class="bar" d="M${x},${base} V${y + 4} q0,-4 4,-4 h${bw - 8} q4,0 4,4 V${base} Z" fill="${c}" data-tip="<b>${m} · ${task.name}</b><br>${n}: ${v[0]} ± ${v[1]}"/>`;
+      g += `<line x1="${x + bw / 2}" x2="${x + bw / 2}" y1="${Y(Math.min(max, v[0] + v[1]))}" y2="${Y(Math.max(0, v[0] - v[1]))}" stroke="#0f172a" stroke-width="1" opacity=".45" pointer-events="none"/>`;
+    });
+    const d = task.higher ? `+${(u[0] - o[0]).toFixed(1)}` : `−${((o[0] - u[0]) / o[0] * 100).toFixed(0)}%`;
+    g += `<text class="d" x="${cx}" y="${Math.min(Y(o[0] + o[1]), Y(u[0] + u[1])) - 7}" text-anchor="middle">${d}</text>`;
+    g += `<text x="${cx}" y="${h - 8}" text-anchor="middle" style="fill:#0f172a;font-weight:500">${m}</text>`;
+  });
+  g += `<line x1="${l}" x2="${w - r}" y1="${Y(0)}" y2="${Y(0)}" stroke="#cbd5e1"/>`;
+  return `<div class="card tchart"><h4>${task.name}</h4><svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${task.name}: Original vs Ours for each world model">${g}</svg></div>`;
+}
+$("#rowSR").innerHTML = [0, 1, 2].map(taskChart).join("");
+$("#rowCD").innerHTML = [3, 4].map(taskChart).join("") + `<div class="card side">
+  <h4 style="margin:0;font-size:15px">Beyond JEPA: a video world model</h4>
+  <p class="note" style="margin:0">NWM trained with CompACT, goal-conditioned navigation on RECON (lower is better).</p>
+  <div class="ovh"><div><span>ATE</span><b>1.3141 → 1.2835</b><span style="color:var(--good);font-weight:600">−2.3%</span></div><div><span>RPE (trans.)</span><b>0.3831 → 0.3773</b><span style="color:var(--good);font-weight:600">−1.5%</span></div></div>
+</div>`;
+document.querySelectorAll(".tchart .bar").forEach(b => { b.onmousemove = (e) => showTip(e, b.dataset.tip); b.onmouseleave = hideTip; });
+
+// ---------- 03: rollout carousel ----------
+const CAPS = {
+  goalSplit: "Each video: left half environment rollout, right half goal.",
+  dino: "Top: real rollout · bottom: imagined rollout. Left: rollout · right: goal. Chamfer distance: lower is better.",
+};
+// Chamfer distance of the shown episodes (Original, Ours), for tasks without a binary success.
+const EP_CD = { rope: [1.38, 0.56], granular: [0.49, 0.30] };
+const vid = (src) => `<video src="${src}" muted loop playsinline autoplay preload="auto"></video>`;
+function pairRow(wm, key, v, labelRow) {
+  const cd = EP_CD[key];
+  // Binary tasks get a Fail/Success badge on the video; Chamfer tasks get the value underneath (no room on the frame).
+  const badge = (k) => cd ? "" : `<span class="res" style="background:${k ? "#15803d" : "#b91c1c"}">${k ? "Success" : "Fail"}</span>`;
+  const below = (k) => cd ? `<div class="cdv${k ? " u" : ""}">Chamfer distance = ${cd[k].toFixed(2)}</div>` : "";
+  return `${labelRow ? `<div class="wm">${wm}</div>` : ""}<div class="pair">${[["Original", v[0]], ["Ours", v[1]]].map(([n, src], k) =>
+    `<div><div class="pv">${v[2] ? `<div class="split">${vid(src)}<img src="${v[2]}" alt="goal"></div>` : vid(src)}<span class="tag">${n}</span>${badge(k)}</div>${below(k)}</div>`).join("")}</div>`;
+}
+$("#rail").innerHTML = D.tasks.map(t => {
+  const models = Object.keys(D.videos).filter(wm => D.videos[wm][t.key]);
+  const multi = models.length > 1;
+  return `<article class="rcard"><div class="hd"><b>${t.name}</b><span class="note">${multi ? models.join(" (top) · ").replace(/$/, " (bottom)") : models[0]}</span></div>
+    ${models.map(wm => pairRow(wm, t.key, D.videos[wm][t.key], multi)).join("")}
+    <p class="cap">${models[0] === "DINO-WM" ? CAPS.dino : CAPS.goalSplit}</p></article>`;
+}).join("");
+const rail = $("#rail"), cards = [...rail.children];
+const step = () => cards[0].getBoundingClientRect().width + 16;
+function railUpdate() {
+  const atEnd = rail.scrollLeft + rail.clientWidth > rail.scrollWidth - 4;
+  // The last card can't snap to the left edge, so report it explicitly once the rail hits the end.
+  const idx = atEnd ? cards.length - 1 : Math.round(rail.scrollLeft / step());
+  $("#railPos").textContent = `${idx + 1} / ${cards.length}`;
+  $("#railPrev").disabled = rail.scrollLeft < 4;
+  $("#railNext").disabled = atEnd;
+}
+$("#railPrev").onclick = () => rail.scrollBy({ left: -step() });
+$("#railNext").onclick = () => rail.scrollBy({ left: step() });
+rail.addEventListener("scroll", railUpdate, { passive: true });
+addEventListener("resize", railUpdate);
+railUpdate();
+// Keep each card's two videos in sync.
+(function sync() {
+  document.querySelectorAll("#rail .pair").forEach(p => { const [a, b] = p.querySelectorAll("video"); if (a.duration && b.duration && !a.paused && Math.abs(a.currentTime - b.currentTime) > 0.08) b.currentTime = a.currentTime; });
+  requestAnimationFrame(sync);
+})();
+
+// ---------- 04: real robot ----------
+const RV = D.robotVideos;
+$("#rtasks").innerHTML = Object.values(RV).map(task => `<div class="rtask"><div class="hd"><b>${task.name}</b><span class="note">${task.desc}</span></div>
+  <div class="rvids">${task.runs.map(r => `<div class="rv ${r.ok ? "win" : ""}">
+    <video data-src="${r.src}" muted loop playsinline preload="none"></video>
+    <div class="cap"><div class="h"><span>${r.label}</span><span class="res" style="background:${r.ok ? "#15803d" : "#b91c1c"}">${r.ok ? "Success" : "Fail"}</span></div><p>${r.note}</p></div></div>`).join("")}</div></div>`).join("");
+// Load each robot video only when it comes near the viewport (they are ~1-4 MB each).
+function loadVid(v) {
+  if (v.src) return;
+  v.src = v.dataset.src; v.playbackRate = 2;
+  v.onloadedmetadata = () => { v.playbackRate = 2; v.play().catch(() => {}); };
+}
+const rvs = [...document.querySelectorAll("#rtasks video")];
+if ("IntersectionObserver" in window) {
+  const io = new IntersectionObserver((es) => es.forEach(e => {
+    if (e.isIntersecting) { loadVid(e.target); e.target.play().catch(() => {}); } else if (e.target.src) e.target.pause();
+  }), { rootMargin: "300px 0px" });
+  rvs.forEach(v => io.observe(v));
+} else rvs.forEach(loadVid);
+$("#rbars").innerHTML = `<div class="rkey"><span>Top bar: PickPlace</span><span>Bottom bar: BowlStack</span><span>Success over 15 unseen initial bowl positions</span></div>` +
+  D.robot.map((r, i) => `<div class="rrow"><div class="nm ${i === 2 ? "win" : ""}">${r.label}</div>
+    <div class="rtrack"><i class="${i === 2 ? "u" : ""}" style="width:${r.pickplace / 15 * 100}%"></i><i class="${i === 2 ? "u" : ""}" style="width:${r.bowlstack / 15 * 100}%"></i></div>
+    <div class="v">${r.pickplace}/15 · ${r.bowlstack}/15</div></div>`).join("");
+
+// ---------- 05: compute charts ----------
+// Generic line plot over categorical x positions.
+function plot(el, cfg) {
+  const w = cfg.w || 360, h = cfg.h || 230, l = 36, r = cfg.r ?? 12, tp = 14, bt = 28;
+  const X = (i) => l + i * (w - l - r) / (cfg.xs.length - 1), Y = (v) => tp + (1 - (v - cfg.lo) / (cfg.hi - cfg.lo)) * (h - tp - bt);
+  let g = "";
+  cfg.ticks.forEach(v => g += `<line x1="${l}" x2="${w - r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#eef1f5"/><text x="${l - 6}" y="${Y(v) + 4}" text-anchor="end">${cfg.fmtTick ? cfg.fmtTick(v) : v}</text>`);
+  cfg.xs.forEach((x, i) => { if (!cfg.xEvery || (i + 1) % cfg.xEvery === 0 || i === 0) g += `<text x="${X(i)}" y="${h - 8}" text-anchor="middle">${cfg.xl || ""}${x}</text>`; });
+  // Reference-line labels sit just under the line, at the left or right end (whichever side is clear).
+  (cfg.hrefs || []).forEach(ref => g += `<line x1="${l}" x2="${w - r}" y1="${Y(ref.v)}" y2="${Y(ref.v)}" stroke="#e07b2e" stroke-width="2" stroke-dasharray="6 4"/>${ref.label ? `<text x="${ref.left ? l + 6 : w - r}" y="${Y(ref.v) + 14}" text-anchor="${ref.left ? "start" : "end"}" style="fill:#c2410c;font-weight:600;paint-order:stroke;stroke:#fff;stroke-width:3px">${ref.label}</text>` : ""}`);
+  (cfg.vrefs || []).forEach(ref => g += `<line x1="${X(ref.i)}" x2="${X(ref.i)}" y1="${tp}" y2="${h - bt}" stroke="#2556d6" stroke-dasharray="4 4" opacity=".6"/><text x="${X(ref.i) + (ref.i ? -6 : 6)}" y="${h - bt - 6}" text-anchor="${ref.i ? "end" : "start"}" style="fill:#2556d6;font-weight:600;paint-order:stroke;stroke:#fff;stroke-width:3px">${ref.label}</text>`);
+  cfg.series.forEach(s => g += `<path d="${s.vals.map((v, i) => `${i ? "L" : "M"}${X(i)},${Y(v)}`).join("")}" fill="none" stroke="${s.c}" stroke-width="2" ${s.dash ? 'stroke-dasharray="6 4"' : ""}/>`);
+  cfg.series.forEach(s => s.vals.forEach((v, i) => g += `<circle cx="${X(i)}" cy="${Y(v)}" r="${s.dash ? 4 : 5}" fill="${s.dash ? "#fff" : s.c}" stroke="${s.dash ? s.c : "#fff"}" stroke-width="2"/><circle class="hit" cx="${X(i)}" cy="${Y(v)}" r="12" fill="transparent" data-t="${s.name} · ${cfg.xl || cfg.xName || ""}${cfg.xs[i]}: <b>${cfg.fmt ? cfg.fmt(v) : v}</b>"/>`));
+  el.innerHTML = (cfg.head || "") + `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${cfg.aria || ""}">${g}</svg>`;
+  el.querySelectorAll(".hit").forEach(c => { c.onmousemove = (e) => showTip(e, c.dataset.t); c.onmouseleave = hideTip; });
+}
+const sw = (c, dash, hollow) => `<svg viewBox="0 0 22 8"><line x1="0" x2="22" y1="4" y2="4" stroke="${c}" stroke-width="2" ${dash ? 'stroke-dasharray="5 3"' : ""}/><circle cx="11" cy="4" r="3.5" fill="${hollow ? "#fff" : c}" stroke="${hollow ? c : "#fff"}" stroke-width="1.5"/></svg>`;
+
+// Reacher CEM-budget sweep: both world models on one chart (colour = planning cost, line style = model).
+plot($("#bud"), {
+  xs: D.budget.N, xl: "N=", lo: 50, hi: 100, ticks: [50, 60, 70, 80, 90, 100], fmt: (v) => v + "%",
+  hrefs: [{ v: 76, label: "Original at N = 300", left: true }],
+  series: [
+    { name: "Le-WM · Original", vals: D.budget["Le-WM"].orig, c: "#a3abb8" },
+    { name: "PLDM · Original", vals: D.budget.PLDM.orig, c: "#a3abb8", dash: true },
+    { name: "Le-WM · Ours", vals: D.budget["Le-WM"].ours, c: "#2556d6" },
+    { name: "PLDM · Ours", vals: D.budget.PLDM.ours, c: "#2556d6", dash: true },
+  ],
+  aria: "Reacher success rate versus number of CEM samples for Le-WM and PLDM",
+  head: `<h4 style="margin:0 0 2px;font-size:15px">Fewer CEM samples · Reacher</h4>
+    <p class="note" style="margin:0 0 8px">Success rate (%) vs. CEM samples N, λ = 0.07. Ours at N = 30 is already above Original at N = 300.</p>
+    <div class="plot-legend"><span>${sw("#a3abb8")}Le-WM · Original</span><span>${sw("#2556d6")}Le-WM · Ours</span><span>${sw("#a3abb8", true, true)}PLDM · Original</span><span>${sw("#2556d6", true, true)}PLDM · Ours</span></div>`,
+});
+
+// DINO-WM mean Chamfer distance per planning step (Fig. 4). Values read off the paper figure, ±0.01.
+const CD_STEPS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const CD = {
+  Granular: { orig: [0.89, 0.89, 0.82, 0.72, 0.73, 0.58, 0.54, 0.56, 0.53, 0.49], ours: [0.83, 0.74, 0.64, 0.55, 0.45, 0.46, 0.39, 0.38, 0.35, 0.34], lo: 0.3, hi: 0.9, ticks: [0.3, 0.45, 0.6, 0.75, 0.9] },
+  Rope: { orig: [1.61, 1.50, 1.42, 1.37, 1.38, 1.38, 1.37, 1.39, 1.39, 1.38], ours: [1.24, 0.92, 0.84, 0.83, 0.80, 0.82, 0.69, 0.70, 0.65, 0.55], lo: 0.5, hi: 1.7, ticks: [0.5, 0.8, 1.1, 1.4, 1.7] },
+};
+[["Granular", "#cdGran"], ["Rope", "#cdRope"]].forEach(([task, sel]) => {
+  const c = CD[task], target = c.orig.at(-1), first = c.ours.findIndex(v => v <= target);
+  plot($(sel), {
+    w: 300, h: 220, r: 8, xs: CD_STEPS, xName: "step ", xEvery: 2, lo: c.lo, hi: c.hi, ticks: c.ticks,
+    fmtTick: (v) => v.toFixed(2), fmt: (v) => "≈ " + v.toFixed(2),
+    hrefs: [{ v: target, label: "Original's final" }], vrefs: [{ i: first, label: `Ours reaches it at step ${first + 1}` }],
+    series: [{ name: "Original", vals: c.orig, c: "#a3abb8" }, { name: "Ours", vals: c.ours, c: "#2556d6" }],
+    aria: `${task}: mean Chamfer distance over planning steps with DINO-WM`,
+    head: `<h5>${task}</h5><div class="plot-legend"><span>${sw("#a3abb8")}Original</span><span>${sw("#2556d6")}Ours</span></div>`,
+  });
+});
+$("#ovh").innerHTML = D.latency.map(l => `<div><span>${l.model} verifier overhead</span><b>+${l.pct}%</b><span>${l.idm} ms / ${l.wm} ms per CEM iteration</span></div>`).join("");
+
+// ---------- nav highlight ----------
+const navLinks = [...document.querySelectorAll("#nav a")];
+if ("IntersectionObserver" in window) document.querySelectorAll("section[id]").forEach(s => new IntersectionObserver((es) => es.forEach(e => {
+  if (e.isIntersecting) navLinks.forEach(a => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id));
+}), { rootMargin: "-40% 0px -55% 0px" }).observe(s));
+</script>
 </body>
 </html>
