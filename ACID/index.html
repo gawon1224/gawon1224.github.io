@@ -67,21 +67,22 @@
 
   /* ---------- 01: Fig. 3 step-through ---------- */
   .f3 { margin-top: 20px; }
-  .f3-head, .f3-row { display: grid; grid-template-columns: 2fr 2.4fr 2.4fr 2fr; gap: 14px; }
+  /* One row per task, six equal frames: Start | Original (real, imagined) | Ours (real, imagined) | Goal. */
+  .f3-head, .f3-row { display: grid; grid-template-columns: 1fr 2fr 2fr 1fr; gap: 12px; }
   .f3-head { font: 700 18px/1.25 var(--sans); color: var(--ink); padding: 0 0 10px; align-items: end; letter-spacing: -.01em; }
   .f3-head span { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
   .f3-head small { font: 500 15px var(--mono); color: var(--ink-2); letter-spacing: 0; }
-  .f3-row { margin-bottom: 18px; align-items: stretch; }
+  .f3-row { margin-bottom: 14px; align-items: end; }
   .f3-task { grid-column: 1 / -1; font: 600 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin: 6px 0 -6px; }
   .f3 img { width: 100%; display: block; border-radius: 8px; }
-  .f3-big { position: relative; align-self: center; }
+  .f3-big { position: relative; padding-bottom: 8px; }
   .f3-big img { aspect-ratio: 1; object-fit: cover; height: auto; }
-  .f3-pair { display: grid; grid-template-rows: 1fr 1fr; gap: 8px; border-radius: 12px; padding: 8px; }
+  .f3-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-radius: 12px; padding: 8px; }
   .f3-pair.orig { background: #fef2f2; }
   .f3-pair.ours { background: var(--ours-soft); }
-  .f3-cell { position: relative; display: grid; grid-template-columns: 78px 1fr; gap: 8px; align-items: center; }
-  .f3-cell .lab { font: 600 14px/1.3 var(--sans); color: var(--ink); }
-  .f3-cell .lab small { display: block; font: 500 13px var(--mono); color: var(--ink-2); }
+  .f3-cell { position: relative; }
+  .f3-cell .lab { display: flex; gap: 6px; align-items: baseline; font: 600 13px/1.3 var(--sans); color: var(--ink); margin: 0 0 5px 2px; }
+  .f3-cell .lab small { font: 500 12px var(--mono); color: var(--ink-2); }
   .f3-cell img { aspect-ratio: 1; object-fit: cover; transition: opacity .25s; }
   .f3-ctl { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 4px 0 18px; }
   .steps-seg { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
@@ -235,13 +236,9 @@
     .f3-row { grid-template-columns: 1fr 1fr; }
     .f3-big { order: 3; }
     .f3-big::before { content: attr(data-l); position: absolute; bottom: 8px; left: 8px; font: 600 11px var(--sans); background: rgba(255,255,255,.92); padding: 2px 7px; border-radius: 5px; z-index: 1; }
-    .f3-pair { grid-template-rows: auto auto auto; }
+    .f3-pair { grid-template-columns: 1fr; }
     .f3-pair::before { content: attr(data-l); font: 600 12px var(--sans); }
-    .f3-cell { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 860px) and (min-width: 641px) {
-    .f3-cell { grid-template-columns: 1fr; }
-    .f3-cell .lab { display: flex; gap: 6px; align-items: baseline; }
+    .f3-big { padding-bottom: 0; }
   }
   @media (max-width: 560px) {
     .metric-row.three, .metric-row.two, .cd-pair { grid-template-columns: 1fr; }
@@ -278,7 +275,7 @@
     <div class="num">01 · THE REALIZATION GAP</div>
     <h2>Does the imagined plan actually happen?</h2>
     <p class="lead">Standard planning scores a candidate only by how close its <b>predicted</b> final state is to the goal. Nothing checks whether each predicted step could actually be produced by its action.</p>
-    <p class="lead">Below, DINO-WM plans the same episode twice. The top tile in each pair is the <b>real</b> environment; the bottom tile is what the world model <b>imagined</b>, with the real object overlaid in magenta. Step through the plan and watch where they split.</p>
+    <p class="lead">Below, DINO-WM plans the same episode twice. In each pair, the left frame is the <b>real</b> environment and the right frame is what the world model <b>imagined</b>, with the real object overlaid in magenta. Step through the plan and watch where they split.</p>
   </div>
   <div class="card f3" id="f3">
     <div class="f3-ctl">
@@ -413,7 +410,6 @@
       <div class="cd-pair"><div id="cdGran"></div><div id="cdRope"></div></div>
     </div>
   </div>
-  <div class="ovh" id="ovh" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px"></div>
 </div></section>
 
 <section id="bib"><div class="wrap">
@@ -491,13 +487,6 @@ window.ACID = {
     "Le-WM": { orig: [68, 62, 70, 76], ours: [82, 76, 78, 88] },
     PLDM: { orig: [58, 66, 70, 76], ours: [78, 84, 82, 84] },
   },
-
-  // Table 9 — per-iteration latency (ms).
-  latency: [
-    { model: "Le-WM", wm: 17.54, idm: 2.54, pct: 14.5 },
-    { model: "PLDM", wm: 17.33, idm: 2.51, pct: 14.5 },
-    { model: "DINO-WM", wm: 2080.5, idm: 245.25, pct: 11.8 },
-  ],
 
   // Table 6 — NWM w/ CompACT on RECON navigation (lower is better).
   nwm: { ate: [1.3141, 1.2835], rpe: [0.3831, 0.3773] },
@@ -830,7 +819,6 @@ const CD = {
     head: `<h5>${task}</h5><div class="plot-legend"><span>${sw("#a3abb8")}Original</span><span>${sw("#2556d6")}Ours</span></div>`,
   });
 });
-$("#ovh").innerHTML = D.latency.map(l => `<div><span>${l.model} verifier overhead</span><b>+${l.pct}%</b><span>${l.idm} ms / ${l.wm} ms per CEM iteration</span></div>`).join("");
 
 // ---------- nav highlight ----------
 const navLinks = [...document.querySelectorAll("#nav a")];
