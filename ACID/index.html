@@ -276,7 +276,7 @@
 <section id="gap"><div class="wrap">
   <div class="narrow">
     <div class="num">01 · THE REALIZATION GAP</div>
-    <h2>Plans that only look right</h2>
+    <h2>Does the imagined plan actually happen?</h2>
     <p class="lead">Standard planning scores a candidate only by how close its <b>predicted</b> final state is to the goal. Nothing checks whether each predicted step could actually be produced by its action.</p>
     <p class="lead">Below, DINO-WM plans the same episode twice. The top tile in each pair is the <b>real</b> environment; the bottom tile is what the world model <b>imagined</b>, with the real object overlaid in magenta. Step through the plan and watch where they split.</p>
   </div>
@@ -305,8 +305,8 @@
 <!-- 02 ------------------------------------------------------------------ -->
 <section id="cycle"><div class="wrap">
   <div class="narrow">
-    <div class="num">02 · CYCLE ACTION CONSISTENCY</div>
-    <h2>Close the cycle</h2>
+    <div class="num">02 · METHOD</div>
+    <h2>Close the loop with Cycle Action Consistency</h2>
     <p class="lead">The true outcome of an action is unknown until it is executed, but the action itself is known. ACID moves the check into action space.</p>
   </div>
   <div class="cycle">
@@ -402,7 +402,7 @@
 <section id="compute"><div class="wrap">
   <div class="narrow">
     <div class="num">05 · COMPUTE</div>
-    <h2>Less compute</h2>
+    <h2>Less planning compute</h2>
     <p class="lead">ACID reaches the baseline's full-budget quality with far less search. On Reacher, 30 CEM samples already beat the baseline's 300. With DINO-WM, ACID reaches the baseline's final Chamfer distance in half the planning steps on Granular, and after the first step on Rope. The verifier itself adds about 12–15% per CEM iteration.</p>
   </div>
   <div class="compute-grid">
