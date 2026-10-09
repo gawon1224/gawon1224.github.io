@@ -117,6 +117,7 @@
   .pipe-fig { position: relative; }
   .pipe-fig img { width: 100%; display: block; }
   .pipe-fig svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #pipeDim { transition: opacity .5s; }
   /* Outlines are always fully visible; only the glow behind them pulses, so nothing depends on an animation finishing. */
   .pipe-fig .ol { fill: none; stroke-width: 4; }
   .pipe-fig .ol.glow { stroke-width: 16; opacity: .18; animation: glowPulse 1.4s ease-in-out infinite; }
@@ -335,13 +336,13 @@
     </div>
   </div>
   <h3 class="sub">The full pipeline, step by step</h3>
-  <p class="note" style="margin:0 0 10px">Fig. 1, animated in the order of Algorithm 1. The highlighted modules are the ones running on the current line; after J CEM iterations the plan is executed and the loop starts again.</p>
+  <p class="note" style="margin:0 0 10px">Fig. 1, animated in the order of Algorithm 1. Each loop starts with the whole figure, then highlights the modules running on the current line; after J CEM iterations the plan is executed and the loop starts again.</p>
   <div class="card pipe" id="pipe">
     <div class="pipe-fig">
       <img src="../assets/img/ACID_teaser.png" alt="ACID overall pipeline (Fig. 1)">
       <svg viewBox="0 0 1599 559" preserveAspectRatio="none" aria-hidden="true">
         <defs><mask id="pipeMask"><rect width="1599" height="559" fill="#fff"/><g id="pipeHoles"></g></mask></defs>
-        <rect width="1599" height="559" fill="#fff" opacity=".78" mask="url(#pipeMask)"/>
+        <rect id="pipeDim" width="1599" height="559" fill="#fff" opacity=".78" mask="url(#pipeMask)"/>
         <g id="pipeOutlines"></g>
       </svg>
     </div>
@@ -611,6 +612,7 @@ setStep(0);
   ];
   const J = 3;
   const S = [];
+  S.push({ line: -1, ms: 4200, full: true, title: "Overview: the full pipeline", desc: "The encoder maps the start and goal images to latents. CEM samples candidate actions (blue), the world model imagines where they lead, and the IDM infers the actions back (orange). Each candidate is scored by goal cost plus action consistency cost. Next, step through it in the order of Algorithm 1.", hl: [] });
   S.push({ line: 0, ms: 2200, title: "Encode the start and the goal", desc: "The encoder E<sub>θ</sub> maps the current observation o₀ and the goal image o<sub>g</sub> to latents z₀ and z<sub>g</sub>. This happens once per planning call.", hl: [["o0", "enc"], ["E0", "enc"], ["z0", "enc"], ["og", "enc"], ["Eg", "enc"], ["zg", "enc"]] });
   S.push({ line: 2, ms: 1800, iter: true, title: "Sample candidate action sequences", desc: "CEM draws N candidate action sequences a<sub>0:H−1</sub> from its current Gaussian. Every candidate goes through the steps below in parallel.", hl: [["arow", "wm"]] });
   for (let t = 0; t < 3; t++) {
@@ -621,7 +623,7 @@ setStep(0);
   S.push({ line: 7, ms: 2200, title: "Action consistency cost", desc: "The per-step gap between each conditioning action a<sub>t</sub> (blue) and the action â<sub>t</sub> the IDM recovered (orange). A large gap means the predicted step is not realizable.", hl: [["arow", "wm"], ["ahrow", "idm"], ["cons", "cost"]] });
   S.push({ line: 8, ms: 2000, title: "Scale-invariant augmented cost", desc: "w<sub>a</sub> = λ·σ<sub>g</sub>/σ<sub>a</sub> matches the spread of the two costs across candidates at every iteration, so a single λ works across models and tasks.", hl: [["min", "cost"], ["goal", "cost"], ["cons", "cost"]] });
   S.push({ line: 9, ms: 2000, title: "Refit to the elites", desc: "CEM keeps the K candidates with the lowest augmented cost and refits μ, Σ to them. The next iteration samples around plans that are both goal-reaching and realizable.", hl: [["min", "cost"], ["back", "cost"], ["arow", "wm"]] });
-  const ITER_START = 1, ITER_END = S.length - 1;
+  const ITER_START = 2, ITER_END = S.length - 1;
   S.push({ line: 10, ms: 2200, title: "Execute and replan", desc: "After J iterations the mean sequence μ<sub>J</sub> is executed in the environment (MPC), and planning starts again from the new observation.", hl: [["arow", "wm"]] });
 
   const box = (k) => typeof k === "string" ? R[k] : k;
@@ -634,6 +636,7 @@ setStep(0);
   let i = 0, j = 1, timer = null, playing = !matchMedia("(prefers-reduced-motion: reduce)").matches;
   function render() {
     const s = S[i];
+    $("#pipeDim").style.opacity = s.full ? "0" : "";   // overview: lift the dim layer to show the whole figure
     $("#pipeHoles").innerHTML = s.hl.map(([k]) => { const [x0, y0, x1, y1] = box(k); return `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="12" fill="#000"/>`; }).join("");
     $("#pipeOutlines").innerHTML = s.hl.filter(h => h[2] !== "hole").map(([k, c]) => { const [x0, y0, x1, y1] = box(k); const r = `x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="12" stroke="${C[c]}"`; return `<rect class="ol glow" ${r}/><rect class="ol" ${r}/>`; }).join("");
     lines.forEach((li, k) => li.classList.toggle("on", k === s.line));
@@ -641,7 +644,7 @@ setStep(0);
     $("#pipeTitle").innerHTML = s.title;
     $("#pipeDesc").innerHTML = s.desc;
     const inIter = i >= ITER_START && i <= ITER_END;
-    $("#pipeIter").textContent = inIter ? `CEM iteration j = ${j} / ${J}` : (i === 0 ? "Planning call starts" : "Planning call ends");
+    $("#pipeIter").textContent = inIter ? `CEM iteration j = ${j} / ${J}` : (i === 0 ? "Overview" : i === 1 ? "Planning call starts" : "Planning call ends");
     $("#pipeCount").textContent = `Step ${i + 1} of ${S.length}`;
   }
   function advance(dir) {
