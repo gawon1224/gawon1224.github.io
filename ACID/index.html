@@ -590,7 +590,19 @@ setStep(0);
     G: [[322, 308, 408, 390], [528, 308, 615, 390], [930, 308, 1017, 390]],
     ah: [[270, 450, 408, 550], [476, 450, 614, 550], [820, 450, 1016, 550]],
     goal: [1162, 126, 1590, 338], cons: [1162, 340, 1590, 548], min: [1150, 6, 1594, 110], back: [1110, 36, 1162, 82],
+    // Arrows between modules (revealed without an outline).
+    encA: [202, 188, 236, 232], goalA: [1350, 172, 1382, 232],
+    aF: [], inF: [], Fout: [], Gah: [],
+    dotsZ: [702, 186, 788, 240], dotsG: [702, 320, 780, 380], dotsAh: [702, 470, 780, 520],
+    legend: [[0, 330, 250, 462], [250, 362, 296, 445]],   // always visible
   };
+  for (let t = 0; t < 3; t++) {
+    const cx = (R.F[t][0] + R.F[t][2]) / 2;
+    R.aF.push([cx - 16, 100, cx + 16, 172]);
+    R.inF.push([R.zin[t][2] - 2, 188, R.F[t][0] + 2, 232]);
+    R.Fout.push([R.F[t][2] - 2, 188, R.zout[t][0] + 2, 232]);
+    R.Gah.push([cx - 16, 386, cx + 16, 454]);
+  }
   const C = { enc: "#64748b", wm: "#2556d6", idm: "#e07b2e", cost: "#7c3aed" };
   const tl = ["0", "1", "H−1"];
   const ALGO = [
@@ -609,11 +621,11 @@ setStep(0);
   const J = 3;
   const S = [];
   S.push({ line: -1, ms: 4200, full: true, title: "Overview: the full pipeline", desc: "The encoder maps the start and goal images to latents. CEM samples candidate actions (blue), the world model imagines where they lead, and the IDM infers the actions back (orange). Each candidate is scored by goal cost plus action consistency cost. Next, step through it in the order of Algorithm 1.", hl: [] });
-  S.push({ line: 0, ms: 2200, title: "Encode the start and the goal", desc: "The encoder E<sub>θ</sub> maps the current observation o₀ and the goal image o<sub>g</sub> to latents z₀ and z<sub>g</sub>. This happens once per planning call.", hl: [["o0", "enc"], ["E0", "enc"], ["z0", "enc"], ["og", "enc"], ["Eg", "enc"], ["zg", "enc"]] });
+  S.push({ line: 0, ms: 2200, title: "Encode the start and the goal", desc: "The encoder E<sub>θ</sub> maps the current observation o₀ and the goal image o<sub>g</sub> to latents z₀ and z<sub>g</sub>. This happens once per planning call.", hl: [["o0", "enc"], ["E0", "enc"], ["z0", "enc"], ["og", "enc"], ["Eg", "enc"], ["zg", "enc"], [R.encA, "enc", "hole"], [R.goalA, "enc", "hole"]] });
   S.push({ line: 2, ms: 1800, iter: true, title: "Sample candidate action sequences", desc: "CEM draws N candidate action sequences a<sub>0:H−1</sub> from its current Gaussian. Every candidate goes through the steps below in parallel.", hl: [["arow", "wm"]] });
   for (let t = 0; t < 3; t++) {
-    S.push({ line: 4, ms: 1100, title: `Roll forward, t = ${tl[t]}`, desc: `The world model F<sub>θ</sub> predicts ẑ<sub>${t === 2 ? "H" : t + 1}</sub> from ẑ<sub>${tl[t]}</sub> and the conditioning action a<sub>${tl[t]}</sub>.`, hl: [[R.a[t], "wm"], [R.F[t], "wm"], [R.zin[t], "wm"], [R.zout[t], "wm"]] });
-    S.push({ line: 5, ms: 1100, title: `Infer the action back, t = ${tl[t]}`, desc: `The IDM G<sub>ϕ</sub> reads the predicted transition (ẑ<sub>${tl[t]}</sub>, ẑ<sub>${t === 2 ? "H" : t + 1}</sub>) and infers â<sub>${tl[t]}</sub>, the action that explains it. No extra world-model rollout is needed.`, hl: [[R.zin[t], "idm"], [R.zout[t], "idm"], [R.wires[t], "idm", "hole"], [R.G[t], "idm"], [R.ah[t], "idm"]] });
+    S.push({ line: 4, ms: 1100, title: `Roll forward, t = ${tl[t]}`, desc: `The world model F<sub>θ</sub> predicts ẑ<sub>${t === 2 ? "H" : t + 1}</sub> from ẑ<sub>${tl[t]}</sub> and the conditioning action a<sub>${tl[t]}</sub>.`, hl: [[R.a[t], "wm"], [R.F[t], "wm"], [R.zin[t], "wm"], [R.zout[t], "wm"], [R.aF[t], "wm", "hole"], [R.inF[t], "wm", "hole"], [R.Fout[t], "wm", "hole"], ...(t === 2 ? [[R.dotsZ, "wm", "hole"]] : [])] });
+    S.push({ line: 5, ms: 1100, title: `Infer the action back, t = ${tl[t]}`, desc: `The IDM G<sub>ϕ</sub> reads the predicted transition (ẑ<sub>${tl[t]}</sub>, ẑ<sub>${t === 2 ? "H" : t + 1}</sub>) and infers â<sub>${tl[t]}</sub>, the action that explains it. No extra world-model rollout is needed.`, hl: [[R.zin[t], "idm"], [R.zout[t], "idm"], [R.wires[t], "idm", "hole"], [R.G[t], "idm"], [R.ah[t], "idm"], [R.Gah[t], "idm", "hole"], ...(t === 2 ? [[R.dotsG, "idm", "hole"], [R.dotsAh, "idm", "hole"]] : [])] });
   }
   S.push({ line: 6, ms: 1900, title: "Goal cost", desc: "How close the predicted final latent ẑ<sub>H</sub> lands to the encoded goal z<sub>g</sub>. This is all the standard planner looks at.", hl: [[R.zout[2], "cost"], ["goal", "cost"]] });
   S.push({ line: 7, ms: 2200, title: "Action consistency cost", desc: "The per-step gap between each conditioning action a<sub>t</sub> (blue) and the action â<sub>t</sub> the IDM recovered (orange). A large gap means the predicted step is not realizable.", hl: [["arow", "wm"], ["ahrow", "idm"], ["cons", "cost"]] });
@@ -637,7 +649,7 @@ setStep(0);
     // From the second CEM iteration on, the whole iteration has already been revealed once.
     const upTo = j > 1 && i <= ITER_END ? ITER_END : i;
     const seen = new Set();
-    let holes = "";
+    let holes = R.legend.map(b => `<rect x="${b[0]}" y="${b[1]}" width="${b[2] - b[0]}" height="${b[3] - b[1]}" fill="#000"/>`).join("");
     S.forEach((st, k) => {
       if (k === 0 || k > upTo) return;
       st.hl.forEach(([key]) => {
