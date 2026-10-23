@@ -55,7 +55,6 @@
   .btn.p { background: var(--ours); border-color: var(--ours); color: #fff; }
 
   section { padding: 48px 0; }
-  .num { font: 500 14px var(--mono); color: var(--ours); letter-spacing: .06em; }
   h2 { font: 700 28px/1.2 var(--sans); letter-spacing: -.02em; margin: 6px 0 10px; }
   h3.sub { font: 700 21px/1.3 var(--sans); letter-spacing: -.01em; margin: 34px 0 4px; }
   p.lead { font-size: 18px; color: var(--ink-2); margin: 0 0 12px; }
@@ -118,6 +117,8 @@
   .pipe-fig img { width: 100%; display: block; }
   .pipe-fig svg { position: absolute; inset: 0; width: 100%; height: 100%; }
   #pipeDim { transition: opacity .5s; }
+  #pipeHoles .new { animation: holeIn .6s ease-out; }
+  @keyframes holeIn { from { opacity: 0; } }
   /* Outlines are always fully visible; only the glow behind them pulses, so nothing depends on an animation finishing. */
   .pipe-fig .ol { fill: none; stroke-width: 4; }
   .pipe-fig .ol.glow { stroke-width: 16; opacity: .18; animation: glowPulse 1.4s ease-in-out infinite; }
@@ -273,7 +274,6 @@
 <!-- 01 ------------------------------------------------------------------ -->
 <section id="gap"><div class="wrap">
   <div class="narrow">
-    <div class="num">01 · THE REALIZATION GAP</div>
     <h2>Does the imagined plan actually happen?</h2>
     <p class="lead">Standard planning scores a candidate only by how close its <b>predicted</b> final state is to the goal. Nothing checks whether each predicted step could actually be produced by its action.</p>
     <p class="lead">Below, DINO-WM plans the same episode twice. In each pair, the left frame is the <b>real</b> environment and the right frame is what the world model <b>imagined</b>, with the real object overlaid in magenta. Step through the plan and watch where they split.</p>
@@ -303,7 +303,6 @@
 <!-- 02 ------------------------------------------------------------------ -->
 <section id="cycle"><div class="wrap">
   <div class="narrow">
-    <div class="num">02 · METHOD</div>
     <h2>Close the loop with Cycle Action Consistency</h2>
     <p class="lead">The true outcome of an action is unknown until it is executed, but the action itself is known. ACID moves the check into action space.</p>
   </div>
@@ -342,7 +341,7 @@
       <img src="../assets/img/ACID_teaser.png" alt="ACID overall pipeline (Fig. 1)">
       <svg viewBox="0 0 1599 559" preserveAspectRatio="none" aria-hidden="true">
         <defs><mask id="pipeMask"><rect width="1599" height="559" fill="#fff"/><g id="pipeHoles"></g></mask></defs>
-        <rect id="pipeDim" width="1599" height="559" fill="#fff" opacity=".78" mask="url(#pipeMask)"/>
+        <rect id="pipeDim" width="1599" height="559" fill="#fff" mask="url(#pipeMask)"/>
         <g id="pipeOutlines"></g>
       </svg>
     </div>
@@ -366,7 +365,6 @@
 <!-- 03 ------------------------------------------------------------------ -->
 <section id="results"><div class="wrap">
   <div class="narrow">
-    <div class="num">03 · RESULTS</div>
     <h2>Consistent gains on every world model</h2>
     <p class="lead">Three JEPA-style latent world models, five simulated tasks. Only the planning cost changes; training and the CEM planner stay fixed.</p>
   </div>
@@ -387,7 +385,6 @@
 <!-- 04 ------------------------------------------------------------------ -->
 <section id="robot"><div class="wrap">
   <div class="narrow">
-    <div class="num">04 · REAL ROBOT</div>
     <h2>On a real robot arm</h2>
     <p class="lead">Policy-guided planning on a PiPER arm with a single RGB camera. A Diffusion Policy proposes 20 action chunks and the planning cost picks one. Same policy, same world model, same candidates; only the cost differs.</p>
   </div>
@@ -399,7 +396,6 @@
 <!-- 05 ------------------------------------------------------------------ -->
 <section id="compute"><div class="wrap">
   <div class="narrow">
-    <div class="num">05 · COMPUTE</div>
     <h2>Less planning compute</h2>
     <p class="lead">ACID reaches the baseline's full-budget quality with far less search. On Reacher, 30 CEM samples already beat the baseline's 300. With DINO-WM, ACID reaches the baseline's final Chamfer distance in half the planning steps on Granular, and after the first step on Rope. The verifier does add about 12–15% per CEM iteration, but the samples and planning steps ACID saves in reaching the target more than compensate for that overhead.</p>
   </div>
@@ -554,7 +550,7 @@ function f3set(i) {
 function f3play(on) {
   clearInterval(f3timer); f3timer = null;
   $("#f3play").textContent = on ? "❚❚" : "▶";
-  if (on) f3timer = setInterval(() => f3set((f3i + 1) % STEPS.length), 1400);
+  if (on) f3timer = setInterval(() => f3set((f3i + 1) % STEPS.length), 2400);
 }
 document.querySelectorAll("#f3steps button").forEach(b => b.onclick = () => { f3play(false); f3set(+b.dataset.i); });
 $("#f3play").onclick = () => f3play(!f3timer);
@@ -637,7 +633,21 @@ setStep(0);
   function render() {
     const s = S[i];
     $("#pipeDim").style.opacity = s.full ? "0" : "";   // overview: lift the dim layer to show the whole figure
-    $("#pipeHoles").innerHTML = s.hl.map(([k]) => { const [x0, y0, x1, y1] = box(k); return `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="12" fill="#000"/>`; }).join("");
+    // Cumulative reveal: every module touched so far in this planning call stays visible.
+    // From the second CEM iteration on, the whole iteration has already been revealed once.
+    const upTo = j > 1 && i <= ITER_END ? ITER_END : i;
+    const seen = new Set();
+    let holes = "";
+    S.forEach((st, k) => {
+      if (k === 0 || k > upTo) return;
+      st.hl.forEach(([key]) => {
+        const b = box(key), id = b.join();
+        if (seen.has(id)) return;
+        seen.add(id);
+        holes += `<rect class="${k === i && !(j > 1 && i <= ITER_END) ? "new" : ""}" x="${b[0]}" y="${b[1]}" width="${b[2] - b[0]}" height="${b[3] - b[1]}" rx="12" fill="#000"/>`;
+      });
+    });
+    $("#pipeHoles").innerHTML = holes;
     $("#pipeOutlines").innerHTML = s.hl.filter(h => h[2] !== "hole").map(([k, c]) => { const [x0, y0, x1, y1] = box(k); const r = `x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" rx="12" stroke="${C[c]}"`; return `<rect class="ol glow" ${r}/><rect class="ol" ${r}/>`; }).join("");
     lines.forEach((li, k) => li.classList.toggle("on", k === s.line));
     prog.forEach((p, k) => { p.classList.toggle("on", k === i); p.classList.toggle("done", k < i); });
@@ -662,7 +672,7 @@ setStep(0);
     clearTimeout(timer);
     if (!playing) return;
     // Later CEM iterations run a little faster so the loop doesn't drag.
-    const ms = S[i].ms * (j > 1 && i >= ITER_START && i <= ITER_END ? 0.6 : 1);
+    const ms = S[i].ms * 1.8 * (j > 1 && i >= ITER_START && i <= ITER_END ? 0.6 : 1);
     timer = setTimeout(() => { advance(1); schedule(); }, ms);
   }
   function setPlaying(p) { playing = p; $("#pipePlay").textContent = p ? "❚❚" : "▶"; schedule(); }
