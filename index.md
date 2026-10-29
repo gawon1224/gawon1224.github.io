@@ -14,8 +14,9 @@ I am a 2nd year M.S. student in the [Computer Vision Lab at POSTECH](https://cvl
 
 ## Research Direction
 
-- <b>Latent world models for decision-time planning</b>
-- <b>Efficient and realizable planning for embodied AI</b>
+- <b>When an agent can trust what its world model imagines</b>
+- <b>How it can improve itself by exploring where that model cannot be trusted</b>
+- <b>What a world model should represent for real-time planning</b>
 
 ---
 
