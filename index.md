@@ -14,9 +14,9 @@ I am a 2nd year M.S. student in the [Computer Vision Lab at POSTECH](https://cvl
 
 ## Research Direction
 
-- <b>When an agent can trust what its world model imagines</b>
-- <b>How an agent can improve itself by exploring where its world model cannot be trusted</b>
-- <b>What a world model should represent for real-time planning</b>
+- When an agent can trust what its world model imagines
+- How an agent can improve itself by exploring where its world model cannot be trusted
+- What a world model should represent for real-time planning
 
 ---
 
