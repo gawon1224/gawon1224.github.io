@@ -4,7 +4,7 @@ main:
   # 항목별로 필요 없는 줄(code, page, bibtex, notes 등)은 지워도 됩니다.
   - title: "ACID: Action Consistency via Inverse Dynamics for Planning with World Models"
     authors: <strong>Gawon Seo</strong>, Dongwon Kim<sup>&dagger;</sup>, Suha Kwak<sup>&dagger;</sup> (&dagger;=corresponding authors)
-    # conference_short: arXiv preprint
+    conference_short: arXiv 2026
     conference: arXiv preprint.
     pdf: https://arxiv.org/pdf/2607.02403
     # code: https://github.com/gawon1224/your-repo
@@ -32,7 +32,7 @@ main:
 
   - title: "Generating Accurate and Detailed Captions for High-Resolution Images"
     authors: Hankyeol Lee, <strong>Gawon Seo</strong>, Kyounggyu Lee, Dogun Kim, Kyungwoo Song, Jiyoung Jung
-    # conference_short: arXiv preprint
+    conference_short: arXiv 2025
     conference: arXiv preprint.
     pdf: https://arxiv.org/pdf/2510.27164
     # code: https://github.com/gawon1224/your-repo

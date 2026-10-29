@@ -1,91 +1,96 @@
-.badge {
-    display: inline-block;
-    padding: 0.25em 0.4em;
-    font-size: 75%;
-    font-weight: 700;
-    line-height: 1;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: baseline;
-    border-radius: 0.25rem;
-    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+/* Publication rows: teaser on the left, title / authors / venue + links on the right.
+   Colors and fonts come from the tokens in _sass/minimal-light.scss and font.css. */
+
+.publications {
+  display: grid;
+  gap: 28px;
 }
 
-.badge {
-    color: #fff !important;
-    border-radius: 0.125rem;
-    -webkit-box-shadow: 0 2px 5px 0 rgb(0 0 0 / 16%), 0 2px 10px 0 rgb(0 0 0 / 12%);
-    box-shadow: 0 2px 5px 0 rgb(0 0 0 / 16%), 0 2px 10px 0 rgb(0 0 0 / 12%);
+.pub {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
 }
-
-:root { --global-bg-color: #ffffff; --global-code-bg-color: rgba(181, 9, 172, 0.05); --global-text-color: #000000; --global-text-color-light: #828282; --global-theme-color: #002D72; --global-hover-color: #ffb81c; --global-footer-bg-color: #1c1c1c; --global-footer-text-color: #e8e8e8; --global-footer-link-color: #ffffff; --global-distill-app-color: #828282; }
-
-
-blockquote { background: var(--global-bg-color); border-left: 2px solid var(--global-theme-color); margin: 1.5em 10px; padding: 0.5em 10px; font-size: 1.2rem; }
-
-@media print, screen and (min-width: 480px) {.col-sm-9 {width: 100%;}}
-
-.publications { margin-top: 2rem; }
-
-.publications h1 { color: var(--global-theme-color); font-size: 2rem; text-align: center; margin-top: 1em; margin-bottom: 1em; }
-
-.publications h2 { margin-bottom: 1rem; }
-
-.publications h2 span { font-size: 1.5rem; }
-
-.publications h2.year { color: #e8e8e8; border-top: 1px solid #e8e8e8; margin-top: 2rem; margin-bottom: 0rem; text-align: right; }
-
-.publications ol.bibliography { list-style: none; padding: 0; margin-top: 0; }
-
-.publications ol.bibliography li { min-height: 110px; margin-bottom: 0.5rem; }
-
-.publications ol.bibliography li .abbr { height: auto; min-height: 8rem; margin-bottom: 0.5rem; }
-
-.publications ol.bibliography li .abbr abbr { display: inline-block; background-color: var(--global-theme-color); padding-left: 1rem; padding-right: 1rem; position: absolute; top: 8px; left: 16px; }
-
-.publications ol.bibliography li .abbr abbr a { color: white; }
-
-.publications ol.bibliography li .abbr abbr a:hover { text-decoration: none; }
-
-.publications ol.bibliography li .abbr .award { color: var(--global-theme-color) !important; border: 1px solid var(--global-theme-color); }
-
-.publications ol.bibliography li .title { font-weight: bolder; }
-
-.publications ol.bibliography li .author { font-size: 1.1em; }
-
-.publications ol.bibliography li .author a { border-bottom: 1px var(--global-theme-color); }
-
-.publications ol.bibliography li .author a:hover { border-bottom-style: solid; text-decoration: none; }
-
-.publications ol.bibliography li .author > em { border-bottom: 1px solid; font-style: normal; }
-
-.publications ol.bibliography li .links a.btn { color: #000000; border: 1px solid #000000; padding-left: 0.5rem; padding-right: 0.5rem; padding-top: 0.1rem; padding-bottom: 0.1rem; }
-
-
-.publications ol.bibliography li .links a.btn:hover { color: var(--global-theme-color); border-color: var(--global-theme-color); }
-
-.publications ol.bibliography li .hidden { font-size: 0.875rem; max-height: 0px; overflow: hidden; text-align: justify; -webkit-transition: 0.15s ease; -moz-transition: 0.15s ease; -ms-transition: 0.15s ease; -o-transition: 0.15s ease; transition: all 0.15s ease; }
-
-.publications ol.bibliography li .hidden p { line-height: 1.4em; margin: 10px; }
-
-.publications ol.bibliography li .hidden pre { font-size: 1em; line-height: 1.4em; padding: 10px; }
-
-.publications ol.bibliography li .hidden.open { max-height: 100em; -webkit-transition: 0.15s ease; -moz-transition: 0.15s ease; -ms-transition: 0.15s ease; -o-transition: 0.15s ease; transition: all 0.15s ease; }
-
-.publications ol.bibliography li div.abstract.hidden { border: dashed 1px var(--global-bg-color); }
-
-.publications ol.bibliography li div.abstract.hidden.open { border-color: var(--global-text-color); }
 
 /* Uniform box for every teaser: object-fit: contain scales each image down to
-   fit without cropping, and the leftover space stays transparent (letterbox)
-   rather than being filled or cropped away. */
-.publications ol.bibliography li .teaser { border-radius: 8px; box-shadow: 3px 3px 6px #888; width: 340px; max-width: 100%; height: 145px; margin-top: 5px; margin-left: 5px; margin-bottom: 5px; object-fit: contain; background: transparent; }
+   fit without cropping, and the leftover space stays white (letterbox). */
+.pub .teaser {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
 
-/* .pub-row is a flex container (style.scss) and .col-sm-9 asks for width:100%,
-   which shrank the teaser column below its declared width. Pin the image column
-   to its content and let the text column absorb the remaining space. */
-.publications ol.bibliography li .pub-row > .col-sm-3 { flex: 0 0 auto; }
+.pub .title {
+  font-weight: 600;
+  line-height: 1.4;
+}
 
-.publications ol.bibliography li .pub-row > .col-sm-9 { flex: 1 1 auto; min-width: 0; width: auto; }
+.pub .title a {
+  color: var(--fg);
+}
 
-@media screen and (max-width: 800px) { .publications ol.bibliography li .teaser { width: 240px; height: 105px; } }
+.pub .title a:hover {
+  color: var(--accent);
+}
+
+.pub .author {
+  margin-top: 3px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.pub .author strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.pub .links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-top: 8px;
+  font-size: 13.5px;
+}
+
+.pub .links a {
+  color: var(--fg);
+  border-bottom: 1px solid var(--line);
+}
+
+.pub .links a:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+.pub .venue {
+  padding: 1px 7px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.pub .notes {
+  font-style: italic;
+  color: var(--accent);
+}
+
+@media (max-width: 760px) {
+  .pub {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .pub .teaser {
+    max-width: 360px;
+  }
+}
