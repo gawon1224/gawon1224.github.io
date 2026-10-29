@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <marker id="hb" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#ffffff"/></marker>
+    <marker id="ho" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="#f4a261"/></marker>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="#2556d6"/>
+  <path d="M7.5 15 A8.5 8.5 0 0 1 24 13" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" marker-end="url(#hb)"/>
+  <path d="M24.5 17 A8.5 8.5 0 0 1 8 19" fill="none" stroke="#f4a261" stroke-width="3" stroke-linecap="round" marker-end="url(#ho)"/>
+</svg>
