@@ -14,6 +14,7 @@ canonical: https://gawon1224.github.io/
 # If you don't need one of them, you may delete the corresponding line.
 google_scholar: https://scholar.google.com/citations?user=p9cgBRkAAAAJ
 cv_link: assets/files/Gawon_Seo.pdf      # assets/files/ 에 CV PDF를 넣으세요 (없으면 이 줄 삭제)
+cv_updated: 2026-10-29                 # CV PDF를 바꿀 때 날짜도 함께 수정하세요
 github_link: https://github.com/gawon1224
 linkedin: https://www.linkedin.com/in/gawon-seo-9a3588279/
 # twitter: https://twitter.com/your-id             # 필요하면 주석 해제 후 수정
