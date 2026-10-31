@@ -8,7 +8,7 @@
   var text = A.text, rrect = A.rrect, dot = A.dot, ring = A.ring, arrow = A.arrow, path = A.path, along = A.along;
   var cycle = A.cycle;
 
-  var BLUE = '#3f6fb0', DARK = '#4a4f5a', BAR = '#9aa1ad', FLOOR = '#f3f4f7';
+  var BLUE = '#3f6fb0', DARK = '#4a4f5a';
 
   /* ---------- the cycle itself, s_t --a--> world model --> ŝ --> inverse dynamics --> â ---------- */
 
@@ -34,21 +34,31 @@
       text(g, l2, cx, r.y + 18, { size: 7.5, align: 'center' });
     }
 
-    // Table, floor and pedestal of one frame (contents are clipped to it).
+    // Palette shared with the CompACT manipulation scene (assets/js/pub-anim/compact.js).
+    var WALL = '#eef0f4', TOP = '#e9dec9', FRONT = '#d6c4a4', EDGE = '#c9b48f';
+    var POST = '#6d7380', JOINT = '#5b616d', LINK = '#9aa1ad', FINGER = '#3a3f48';
+    var TOPD = 6, BALL = { x: 74, r: 3.5 };
+
+    // Wall, table (a thin top in three-quarter view over its front face), pedestal and a ball.
     function stage(g, F) {
       rrect(g, F.x, F.y, F.w, F.h, 3);
-      g.fillStyle = '#ffffff'; g.fill();
+      g.fillStyle = WALL; g.fill();
       g.save();
       rrect(g, F.x, F.y, F.w, F.h, 3); g.clip();
-      g.fillStyle = FLOOR;
-      g.fillRect(F.x, F.y + TY, F.w, F.h - TY);
-      g.fillStyle = '#d7dbe3';
-      rrect(g, F.x + SH.x - 5, F.y + SH.y + 3, 10, TY - SH.y - 3, 1.5); g.fill();
+      g.fillStyle = TOP; g.fillRect(F.x, F.y + TY - TOPD, F.w, TOPD);
+      g.fillStyle = FRONT; g.fillRect(F.x, F.y + TY, F.w, F.h - TY);
+      g.fillStyle = POST;
+      rrect(g, F.x + SH.x - 4, F.y + SH.y, 8, TY - SH.y - 2, 1.5); g.fill();
+      g.fillStyle = JOINT;
+      g.beginPath(); g.ellipse(F.x + SH.x, F.y + TY - 2, 7, 2, 0, 0, Math.PI * 2); g.fill();
+      var bx = F.x + BALL.x, by = F.y + TY - 2 - BALL.r;
+      dot(g, bx, by, BALL.r, BLUE);
+      dot(g, bx - 1.2, by - 1.2, 1.1, 'rgba(255, 255, 255, 0.55)');
       g.restore();
     }
 
     function surface(g, F) {
-      g.strokeStyle = '#c9ced8'; g.lineWidth = 1;
+      g.strokeStyle = EDGE; g.lineWidth = 0.8;
       g.beginPath(); g.moveTo(F.x, F.y + TY); g.lineTo(F.x + F.w, F.y + TY); g.stroke();
     }
 
@@ -58,10 +68,11 @@
     }
 
     function block(g, F, b, alpha) {
+      var x = F.x + b.x - BS / 2, y = F.y + b.y - BS / 2;
       g.save();
       g.globalAlpha *= alpha;
-      g.fillStyle = C.accent;
-      g.fillRect(F.x + b.x - BS / 2, F.y + b.y - BS / 2, BS, BS);
+      g.fillStyle = C.accent; g.fillRect(x, y, BS, BS);
+      g.fillStyle = '#d65a86'; g.fillRect(x, y, BS, 2.5);
       g.restore();
     }
 
@@ -70,15 +81,16 @@
       if (b.y + BS / 2 <= TY) return;
       g.save();
       g.globalAlpha = 0.72;
-      g.fillStyle = FLOOR;
+      g.fillStyle = FRONT;
       var y0 = Math.max(TY, b.y - BS / 2);
       g.fillRect(F.x + b.x - BS / 2 - 0.5, F.y + y0, BS + 1, b.y + BS / 2 - y0 + 0.5);
       g.restore();
     }
 
-    // Side-view arm in the family style of the main ACID scene: two IK links and a parallel gripper.
+    // Side-view arm: two IK links and a parallel gripper, coloured like the CompACT arm.
     // e is the point between the fingertips; the fingers close to the block's width when holding it.
-    function arm(g, F, e, holding, alpha, col) {
+    // A ghost passes one flat colour for every part.
+    function arm(g, F, e, holding, alpha, ghost) {
       var sx = F.x + SH.x, sy = F.y + SH.y;
       var wx = F.x + e.x, wy = F.y + e.y - WRIST;
       var dx = wx - sx, dy = wy - sy, d = clamp(Math.hypot(dx, dy), 1, 2 * LK - 0.5);
@@ -87,18 +99,20 @@
       var w = (holding ? BS + 1 : 3) / 2;
       g.save();
       g.globalAlpha *= alpha;
-      g.strokeStyle = col;
-      g.lineCap = 'round';
-      g.lineWidth = 3.4;
+      g.lineCap = g.lineJoin = 'round';
+      g.strokeStyle = ghost || LINK;
+      g.lineWidth = 3.6;
       g.beginPath(); g.moveTo(sx, sy); g.lineTo(el.x, el.y); g.lineTo(wx, wy); g.stroke();
-      dot(g, sx, sy, 2.8, col);
-      dot(g, el.x, el.y, 2.2, col);
+      dot(g, sx, sy, 2.6, ghost || JOINT);
+      dot(g, el.x, el.y, 2.2, ghost || JOINT);
+      g.fillStyle = ghost || JOINT;
+      rrect(g, wx - 2, wy - 1, 4, 4, 0.8); g.fill();
+      g.strokeStyle = ghost || FINGER;
       g.lineWidth = 1.6;
       g.beginPath();
-      g.moveTo(wx, wy); g.lineTo(wx, wy + 3);
       g.moveTo(wx - w - 1, wy + 3); g.lineTo(wx + w + 1, wy + 3);
-      g.moveTo(wx - w, wy + 3); g.lineTo(wx - w, F.y + e.y + 4);
-      g.moveTo(wx + w, wy + 3); g.lineTo(wx + w, F.y + e.y + 4);
+      g.moveTo(wx - w, wy + 3); g.lineTo(wx - w, F.y + e.y + 4); g.lineTo(wx - w + 1.2, F.y + e.y + 4);
+      g.moveTo(wx + w, wy + 3); g.lineTo(wx + w, F.y + e.y + 4); g.lineTo(wx + w - 1.2, F.y + e.y + 4);
       g.stroke();
       g.restore();
     }
@@ -208,7 +222,7 @@
         stage(g, F0);
         surface(g, F0);
         block(g, F0, B0, 1);
-        arm(g, F0, B0, true, 1, DARK);
+        arm(g, F0, B0, true, 1);
         border(g, F0);
         var px0 = F0.x + B0.x, py0 = F0.y + B0.y - WRIST;
         vec(g, px0, py0, ACT.x * SHOW, ACT.y * SHOW, C.fg, false);
@@ -240,7 +254,7 @@
         g.save();
         rrect(g, F1.x, F1.y, F1.w, F1.h, 3); g.clip();
         surface(g, F1);
-        arm(g, F1, B0, true, 0.3, C.faint);
+        arm(g, F1, B0, true, 0.35, C.faint);
         g.strokeStyle = C.faint; g.lineWidth = 1; g.setLineDash([2, 1.5]);
         g.strokeRect(F1.x + B0.x - BS / 2 + 0.5, F1.y + B0.y - BS / 2 + 0.5, BS - 1, BS - 1);
         g.setLineDash([]);
@@ -252,7 +266,7 @@
           path(g, [{ x: F1.x + B0.x, y: F1.y + B0.y }, { x: bx, y: by }], 1, C.muted, 0.8, [1.5, 1.5], 1);
           block(g, F1, b, 1);
           sunk(g, F1, b);
-          arm(g, F1, e, inHand, 1, DARK);
+          arm(g, F1, e, inHand, 1);
           var near = s.p.in && dist(s.p, { x: bx, y: by }) < 10;
           if (near || s.grab) {
             g.strokeStyle = C.accent; g.lineWidth = 1.2;
