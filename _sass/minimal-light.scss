@@ -67,10 +67,10 @@ hr {
 .wrapper {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
-  gap: 64px;
-  max-width: 1120px;
+  gap: 48px;
+  max-width: 1320px;
   margin: 0 auto;
-  padding: 0 40px;
+  padding: 0 32px;
 }
 
 /* ---------- Profile column ---------- */
