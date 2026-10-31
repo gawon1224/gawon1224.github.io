@@ -8,7 +8,7 @@
 
 .pub {
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
+  grid-template-columns: 240px minmax(0, 1fr);
   gap: 22px;
   align-items: start;
 }
@@ -82,6 +82,17 @@
 .pub .notes {
   font-style: italic;
   color: var(--accent);
+}
+
+/* Interactive teasers (assets/js/pub-anim.js) share the teaser box above. */
+.pub .pub-anim {
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+.pub .pub-anim:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 @media (max-width: 760px) {

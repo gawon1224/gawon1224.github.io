@@ -7,21 +7,25 @@ main:
     conference_short: arXiv 2026
     conference: arXiv preprint.
     pdf: https://arxiv.org/pdf/2607.02403
+    arxiv: https://arxiv.org/abs/2607.02403
     # code: https://github.com/gawon1224/your-repo
     page: https://gawon1224.github.io/ACID/
     # bibtex: assets/files/your-paper.txt
     image: ./assets/img/ACID_teaser.png
+    anim: acid
     # notes: Under Review
   
   - title: "Planning in 8 tokens: A compact discrete tokenizer for latent world model"
     authors: Dongwon Kim, <strong>Gawon Seo</strong>, Jinsung Lee, Minsu Cho, Suha Kwak
     conference_short: CVPR 2026
     conference: The IEEE/CVF Conference on Computer Vision and Pattern Recognition <strong>(CVPR)</strong>, 2026.
-    pdf: https://arxiv.org/abs/2603.05438
+    pdf: https://arxiv.org/pdf/2603.05438
+    arxiv: https://arxiv.org/abs/2603.05438
     # code: https://github.com/gawon1224/your-repo
     page: https://kdwonn.github.io/CompACT/
     # bibtex: assets/files/your-paper.txt
     image: ./assets/img/CompACT_teaser.png
+    anim: compact8
 
   - title: "Planning in 16 tokens: A compact discrete tokenizer for latent world model"
     authors: Dongwon Kim, Jinsung Lee, <strong>Gawon Seo</strong>, Minsu Cho, Suha Kwak
@@ -29,25 +33,30 @@ main:
     conference: The Conference on Robot Learning Workshop (CoRLW) - Learning to Simulate Robot Worlds (LSRW), 2025.
     # bibtex: assets/files/your-paper.txt
     image: ./assets/img/CompACT16_teaser.png
+    anim: compact16
 
   - title: "Generating Accurate and Detailed Captions for High-Resolution Images"
     authors: Hankyeol Lee, <strong>Gawon Seo</strong>, Kyounggyu Lee, Dogun Kim, Kyungwoo Song, Jiyoung Jung
     conference_short: arXiv 2025
     conference: arXiv preprint.
     pdf: https://arxiv.org/pdf/2510.27164
+    arxiv: https://arxiv.org/abs/2510.27164
     # code: https://github.com/gawon1224/your-repo
     # page: https://gawon1224.github.io/your-project-page/
     # bibtex: assets/files/your-paper.txt
     image: ./assets/img/Detail_caption_teaser.png
+    anim: caption
 
   - title: "Enhancing visual classification using comparative descriptors"
     authors: Hankyeol Lee, <strong>Gawon Seo</strong>, Wonseok Choi, Geunyoung Jung, Kyungwoo Song, Jiyoung Jung
     conference_short: WACV 2025
     conference: IEEE/CVF Winter Conference on Applications of Computer Vision <strong>(WACV)</strong>, 2025.
-    pdf: https://arxiv.org/abs/2411.05357
+    pdf: https://arxiv.org/pdf/2411.05357
+    arxiv: https://arxiv.org/abs/2411.05357
     # code: https://github.com/gawon1224/your-repo
     # page: https://gawon1224.github.io/your-project-page/
     # bibtex: assets/files/your-paper.txt
     image: ./assets/img/Comparative_teaser.png
+    anim: comparative
     # notes: Under Review
 
