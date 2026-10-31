@@ -332,14 +332,14 @@
     return out;
   }
 
-  function drawTags(g, dom, boxes, lit) {
+  function drawTags(g, dom, boxes) {
     boxes.forEach(function (r) {
       var col = MASKS[dom][r.i], x = r.x, dark = lum(col) > 0.6;
       r.labs.forEach(function (l) {
         var w = l.length * 4.2 + 3.4;
         rrect(g, x, r.y, w, r.h, 1.8);
         g.fillStyle = col; g.fill();
-        g.strokeStyle = r.i === lit ? C.fg : '#ffffff'; g.lineWidth = r.i === lit ? 1.1 : 0.8; g.stroke();
+        g.strokeStyle = '#ffffff'; g.lineWidth = 0.8; g.stroke();
         text(g, l, x + w / 2, r.y + 7, { size: 7.5, weight: 600, color: dark ? C.fg : '#ffffff', align: 'center' });
         x += w + 1;
       });
@@ -553,7 +553,7 @@
             observe(g, dom, TF, st0, 0.55 * show);
             g.save();
             g.globalAlpha *= show;
-            drawTags(g, dom, tagBoxes(dom, TF, st0, per), planning ? Math.floor(prog * 8 * 3) % 8 : -1);
+            drawTags(g, dom, tagBoxes(dom, TF, st0, per));
             g.restore();
           }
 
